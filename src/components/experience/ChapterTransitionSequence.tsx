@@ -17,6 +17,7 @@ export default function ChapterTransitionSequence({ flashRef }: Props) {
     if (!flash) return
 
     gsap.killTweensOf(camera.position)  // stop any competing chapter tween
+    gsap.killTweensOf(flash)            // stop any in-progress flash fade-out
 
     const startZ = camera.position.z
     const tl = gsap.timeline()

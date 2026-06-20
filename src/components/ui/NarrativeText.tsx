@@ -7,7 +7,7 @@ import { CHAPTERS } from '@/data/chapters'
 
 export default function NarrativeText() {
   const { t } = useLang()
-  const { currentChapter } = useChapter()
+  const { currentChapter, isTransitioning } = useChapter()
   const [visibleCount, setVisibleCount] = useState(0)
   const lines = CHAPTERS[currentChapter]?.narrativeKeys ?? []
 
@@ -18,7 +18,7 @@ export default function NarrativeText() {
     return () => timers.forEach(clearTimeout)
   }, [currentChapter, lines.length])
 
-  if (currentChapter === 0 || !lines.length) return null
+  if (currentChapter === 0 || isTransitioning || !lines.length) return null
 
   return (
     <div style={{ position: 'absolute', bottom: '11%', left: '50%', transform: 'translateX(-50%)', zIndex: 20, textAlign: 'center', maxWidth: '580px', padding: '0 24px' }}>

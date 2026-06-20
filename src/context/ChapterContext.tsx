@@ -18,13 +18,11 @@ export function ChapterProvider({ children }: { children: ReactNode }) {
   const [pendingChapter, setPendingChapter] = useState<ChapterIndex | null>(null)
   const [isTransitioning, setIsTransitioning] = useState(false)
 
-  const navigateTo = useCallback((chapter: ChapterIndex) => {
-    setIsTransitioning(prev => {
-      if (prev) return prev  // ignore if already transitioning
-      setPendingChapter(chapter)
-      return true
-    })
-  }, [])
+  const navigateTo = useCallback((target: ChapterIndex) => {
+    if (isTransitioning || pendingChapter !== null) return
+    setPendingChapter(target)
+    setIsTransitioning(true)
+  }, [isTransitioning, pendingChapter])
 
   const completeTransition = useCallback(() => {
     setPendingChapter(prev => {

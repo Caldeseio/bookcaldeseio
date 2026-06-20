@@ -112,13 +112,18 @@ function Branch({ def }: { def: BranchDef }) {
 }
 
 // ── Chapter 5 root ─────────────────────────────────────────────────────────────
+const START_ANGLE = Math.PI / 2
+const ORBIT_R = 11
+
 export default function Chapter5() {
   const { camera } = useThree()
   const { hideTooltip } = useTooltip()
   const orbitRef = useRef(false)
+  const orbitAngleRef = useRef(START_ANGLE)  // starts at [11, 5, 0] entry position
 
   useEffect(() => {
-    camera.position.set(11, 5, 11)
+    // Place camera on the orbit circle so delta accumulation starts seamlessly
+    camera.position.set(Math.sin(START_ANGLE) * ORBIT_R, 5, Math.cos(START_ANGLE) * ORBIT_R)
     camera.lookAt(0, 2.5, 0)
     const flash = document.querySelector('[data-flash]') as HTMLElement | null
     if (flash) gsap.to(flash, { opacity: 0, duration: 0.4, delay: 0.1 })
@@ -126,14 +131,16 @@ export default function Chapter5() {
     return () => {
       clearTimeout(timer)
       orbitRef.current = false
+      orbitAngleRef.current = START_ANGLE  // reset for next visit
       hideTooltip()
       document.body.style.cursor = 'auto'
     }
   }, [camera, hideTooltip])
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     if (!orbitRef.current) return
-    const t = state.clock.elapsedTime * 0.1
+    orbitAngleRef.current += delta * 0.1
+    const t = orbitAngleRef.current
     const r = 11
     state.camera.position.x = Math.sin(t) * r
     state.camera.position.z = Math.cos(t) * r

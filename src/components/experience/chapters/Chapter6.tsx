@@ -64,11 +64,11 @@ function GoldParticles() {
 // ── Single orbiting note particle ─────────────────────────────────────────────
 function NoteParticle({ index, total }: { index: number; total: number }) {
   const meshRef = useRef<THREE.Mesh>(null)
-  const offset = (index / Math.max(total, 1)) * Math.PI * 2
+  const offsetRef = useRef((index / Math.max(total, 1)) * Math.PI * 2)  // frozen on mount
 
   useFrame((state) => {
     if (!meshRef.current) return
-    const t = state.clock.elapsedTime * 0.5 + offset
+    const t = state.clock.elapsedTime * 0.5 + offsetRef.current  // use frozen ref
     const r = 2.4
     meshRef.current.position.x = Math.sin(t) * r
     meshRef.current.position.y = 2 + Math.sin(t * 0.55) * 0.45
