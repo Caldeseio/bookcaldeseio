@@ -1,3 +1,5 @@
+'use client'
+
 import dynamic from 'next/dynamic'
 import { ChapterProvider } from '@/context/ChapterContext'
 import { LangProvider } from '@/context/LangContext'
