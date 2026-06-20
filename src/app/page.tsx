@@ -3,11 +3,13 @@ import dynamic from 'next/dynamic'
 import { ChapterProvider } from '@/context/ChapterContext'
 import { LangProvider } from '@/context/LangContext'
 import { ProjectProvider } from '@/context/ProjectContext'
+import { TooltipProvider } from '@/context/TooltipContext'
 import LangToggle from '@/components/ui/LangToggle'
 import EntryOverlay from '@/components/ui/EntryOverlay'
 import NarrativeText from '@/components/ui/NarrativeText'
 import ChapterNav from '@/components/ui/ChapterNav'
 import ProjectCard from '@/components/ui/ProjectCard'
+import SkillTooltip from '@/components/ui/SkillTooltip'
 import { useNavigationInput } from '@/hooks/useNavigationInput'
 
 const BookExperience = dynamic(() => import('@/components/experience/BookExperience'), { ssr: false })
@@ -24,6 +26,7 @@ function AppContent() {
       <NarrativeText />
       <ChapterNav />
       <ProjectCard />
+      <SkillTooltip />
     </div>
   )
 }
@@ -33,7 +36,9 @@ export default function Home() {
     <ChapterProvider>
       <LangProvider>
         <ProjectProvider>
-          <AppContent />
+          <TooltipProvider>
+            <AppContent />
+          </TooltipProvider>
         </ProjectProvider>
       </LangProvider>
     </ChapterProvider>
