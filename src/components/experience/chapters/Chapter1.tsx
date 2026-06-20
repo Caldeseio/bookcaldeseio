@@ -1,7 +1,8 @@
 'use client'
-import { useRef, useMemo } from 'react'
+import { useRef, useMemo, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import gsap from 'gsap'
 
 function FloatingCode() {
   const ref = useRef<THREE.Points>(null)
@@ -37,6 +38,13 @@ function FloatingCode() {
 }
 
 export default function Chapter1() {
+  useEffect(() => {
+    const flash = document.querySelector<HTMLDivElement>('[data-flash]')
+    if (flash) {
+      gsap.to(flash, { opacity: 0, duration: 0.6, ease: 'power2.out', delay: 0.1 })
+    }
+  }, [])
+
   return (
     <>
       <ambientLight intensity={0.08} color="#F1EDE3" />
