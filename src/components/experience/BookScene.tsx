@@ -1,21 +1,21 @@
 'use client'
 
+import { useChapter } from '@/context/ChapterContext'
 import Desk from './Desk'
 import SceneLighting from './SceneLighting'
 import ScenePostProcessing from './ScenePostProcessing'
+import TheBook from './TheBook'
 
 interface Props { flashRef: React.RefObject<HTMLDivElement | null> }
 
-export default function BookScene({ flashRef: _ }: Props) {
+export default function BookScene({ flashRef }: Props) {
+  const { navigateTo } = useChapter()
+
   return (
     <>
       <SceneLighting />
       <Desk />
-      {/* Book geometry added in Task 8 */}
-      <mesh position={[0, 0.4, 0]} castShadow>
-        <boxGeometry args={[2, 2.8, 0.32]} />
-        <meshStandardMaterial color="#1B2B1E" roughness={0.55} />
-      </mesh>
+      <TheBook onOpen={() => navigateTo(1)} />
       <ScenePostProcessing />
     </>
   )
