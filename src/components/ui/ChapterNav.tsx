@@ -23,7 +23,7 @@ export default function ChapterNav() {
           {[1, 2, 3, 4, 5, 6].map(n => {
             const idx = n as ChapterIndex
             const active = currentChapter === idx
-            const isImplemented = n <= 3
+            const isImplemented = n <= 6
             return (
               <div key={n} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}
                 onMouseEnter={() => setHovered(n)} onMouseLeave={() => setHovered(null)}>

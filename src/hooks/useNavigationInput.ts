@@ -11,7 +11,7 @@ export function useNavigationInput() {
     if (currentChapter === 0 || isTransitioning) return
 
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight' && currentChapter < 3) {
+      if (e.key === 'ArrowRight' && currentChapter < 6) {
         navigateTo((currentChapter + 1) as ChapterIndex)
       }
       if (e.key === 'ArrowLeft' && currentChapter > 1) {
@@ -23,7 +23,7 @@ export function useNavigationInput() {
       const now = Date.now()
       if (now - lastWheelRef.current < 900) return  // debounce — avoid skipping chapters
       lastWheelRef.current = now
-      if (e.deltaY > 40 && currentChapter < 3) {
+      if (e.deltaY > 40 && currentChapter < 6) {
         navigateTo((currentChapter + 1) as ChapterIndex)
       }
       if (e.deltaY < -40 && currentChapter > 1) {
