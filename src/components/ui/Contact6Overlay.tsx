@@ -1,6 +1,6 @@
 'use client'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useChapter } from '@/context/ChapterContext'
 import { useLang } from '@/context/LangContext'
 import { useNote } from '@/context/NoteContext'
@@ -18,13 +18,21 @@ export default function Contact6Overlay() {
   const { addNote } = useNote()
   const [input, setInput] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [])
 
   const handleSubmit = () => {
     if (!input.trim()) return
     addNote()
     setInput('')
     setSubmitted(true)
-    setTimeout(() => setSubmitted(false), 2500)
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => setSubmitted(false), 2500)
   }
 
   return (

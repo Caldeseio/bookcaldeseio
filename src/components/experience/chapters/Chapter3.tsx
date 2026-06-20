@@ -30,8 +30,9 @@ function DataBar({ label, value, color, index, total }: {
     meshRef.current.scale.y = 0.001
     meshRef.current.position.y = 0
     // Animate: scale.y → 1 and position.y → h/2 (pivot at center, bar rises from floor)
-    gsap.to(meshRef.current.scale, { y: 1, duration: 1.1, delay: index * 0.18 + 0.25, ease: 'power3.out' })
-    gsap.to(meshRef.current.position, { y: h / 2, duration: 1.1, delay: index * 0.18 + 0.25, ease: 'power3.out' })
+    const t1 = gsap.to(meshRef.current.scale, { y: 1, duration: 1.1, delay: index * 0.18 + 0.25, ease: 'power3.out' })
+    const t2 = gsap.to(meshRef.current.position, { y: h / 2, duration: 1.1, delay: index * 0.18 + 0.25, ease: 'power3.out' })
+    return () => { t1.kill(); t2.kill() }
   }, [h, index])
 
   return (
