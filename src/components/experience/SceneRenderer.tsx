@@ -1,14 +1,28 @@
 'use client'
 import { useChapter } from '@/context/ChapterContext'
 import BookScene from './BookScene'
+import ChapterTransitionSequence from './ChapterTransitionSequence'
 import Chapter1 from './chapters/Chapter1'
+import Chapter2 from './chapters/Chapter2'
+import Chapter3 from './chapters/Chapter3'
 
 interface Props { flashRef: React.RefObject<HTMLDivElement | null> }
 
 export default function SceneRenderer({ flashRef }: Props) {
-  const { currentChapter } = useChapter()
-  if (currentChapter === 0) return <BookScene flashRef={flashRef} />
-  if (currentChapter === 1) return <Chapter1 />
-  // Chapters 2-6 added in Phase 2 plan
-  return <mesh><boxGeometry args={[1,1,1]} /><meshStandardMaterial color="#4F9D5B" /></mesh>
+  const { currentChapter, isTransitioning } = useChapter()
+
+  // ChapterTransitionSequence handles inter-chapter transitions (chapters 1+)
+  // BookOpenSequence (inside BookScene) handles the book-open animation (chapter 0 → 1)
+  const showChapterTransition = isTransitioning && currentChapter > 0
+
+  return (
+    <>
+      {currentChapter === 0 && <BookScene flashRef={flashRef} />}
+      {currentChapter === 1 && <Chapter1 />}
+      {currentChapter === 2 && <Chapter2 />}
+      {currentChapter === 3 && <Chapter3 />}
+      {/* Chapters 4-6 added in Phase 3 */}
+      {showChapterTransition && <ChapterTransitionSequence flashRef={flashRef} />}
+    </>
+  )
 }
