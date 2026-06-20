@@ -7,5 +7,5 @@ export const CHAPTERS: ChapterData[] = [
   { index: 3, roman: 'III', titleKey: 'ch3.title', subtitleKey: 'ch3.subtitle', narrativeKeys: ['ch3.line1', 'ch3.line2'] },
   { index: 4, roman: 'IV',  titleKey: 'ch4.title', subtitleKey: 'ch4.subtitle', narrativeKeys: [] },
   { index: 5, roman: 'V',   titleKey: 'ch5.title', subtitleKey: 'ch5.subtitle', narrativeKeys: [] },
-  { index: 6, roman: 'VI',  titleKey: 'ch6.title', subtitleKey: 'ch6.subtitle', narrativeKeys: ['ch6.line1', 'ch6.line2'] },
+  { index: 6, roman: 'VI',  titleKey: 'ch6.title', subtitleKey: 'ch6.subtitle', narrativeKeys: [] },
 ]
