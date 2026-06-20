@@ -11,7 +11,6 @@ import NarrativeText from '@/components/ui/NarrativeText'
 import ChapterNav from '@/components/ui/ChapterNav'
 import ProjectCard from '@/components/ui/ProjectCard'
 import SkillTooltip from '@/components/ui/SkillTooltip'
-import Contact6Overlay from '@/components/ui/Contact6Overlay'
 import { useNavigationInput } from '@/hooks/useNavigationInput'
 
 const BookExperience = dynamic(() => import('@/components/experience/BookExperience'), { ssr: false })
@@ -29,7 +28,6 @@ function AppContent() {
       <ChapterNav />
       <ProjectCard />
       <SkillTooltip />
-      <Contact6Overlay />
     </div>
   )
 }

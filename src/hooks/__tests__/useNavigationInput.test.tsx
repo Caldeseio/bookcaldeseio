@@ -61,4 +61,15 @@ describe('useNavigationInput', () => {
     act(() => { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })) })
     expect(navigateSpy).not.toHaveBeenCalled()
   })
+
+  it('ArrowRight does not navigate when on chapter 4 (max boundary)', async () => {
+    const { useChapter: mockedUseChapter } = await import('@/context/ChapterContext')
+    ;(mockedUseChapter as ReturnType<typeof vi.fn>).mockReturnValueOnce({
+      currentChapter: 4, isTransitioning: false, navigateTo: navigateSpy,
+      pendingChapter: null, completeTransition: vi.fn(),
+    })
+    render(<ChapterProvider><Probe /></ChapterProvider>)
+    act(() => { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })) })
+    expect(navigateSpy).not.toHaveBeenCalled()
+  })
 })
