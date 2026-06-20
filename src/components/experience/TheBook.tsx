@@ -34,6 +34,11 @@ export default function TheBook({ onOpen }: Props) {
     spineTex.dispose()
   }, [spineTex])
 
+  // Dispose all 6 MeshStandardMaterial objects on unmount
+  useEffect(() => {
+    return () => { materials.forEach(m => m.dispose()) }
+  }, [materials])
+
   return (
     <Float speed={1.4} rotationIntensity={0.12} floatIntensity={0.35}>
       <mesh

@@ -154,13 +154,16 @@ export default function Chapter3() {
     camera.position.set(0, 4, 18)
     camera.rotation.set(-0.22, 0, 0)
     const flash = document.querySelector<HTMLDivElement>('[data-flash]')
-    gsap.to(camera.position, { z: 13, duration: 0.7, ease: 'power2.out', delay: 0.05 })
+    const cameraTween = gsap.to(camera.position, { z: 13, duration: 0.7, ease: 'power2.out', delay: 0.05 })
     if (flash) gsap.to(flash, { opacity: 0, duration: 0.4, ease: 'power2.out', delay: 0.05 })
+    return () => { cameraTween.kill() }
   }, [camera])
 
-  // Slow camera pull-back during the scene for cinematic feel
+  // Slow camera pull-back during the scene for cinematic feel (clamped at z=17)
   useFrame((_, delta) => {
-    camera.position.z += delta * 0.08
+    if (camera.position.z < 17) {
+      camera.position.z = Math.min(camera.position.z + delta * 0.08, 17)
+    }
   })
 
   return (
