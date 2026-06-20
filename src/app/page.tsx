@@ -4,6 +4,7 @@ import { ChapterProvider } from '@/context/ChapterContext'
 import { LangProvider } from '@/context/LangContext'
 import { ProjectProvider } from '@/context/ProjectContext'
 import { TooltipProvider } from '@/context/TooltipContext'
+import { NoteProvider } from '@/context/NoteContext'
 import LangToggle from '@/components/ui/LangToggle'
 import EntryOverlay from '@/components/ui/EntryOverlay'
 import NarrativeText from '@/components/ui/NarrativeText'
@@ -37,7 +38,9 @@ export default function Home() {
       <LangProvider>
         <ProjectProvider>
           <TooltipProvider>
-            <AppContent />
+            <NoteProvider>
+              <AppContent />
+            </NoteProvider>
           </TooltipProvider>
         </ProjectProvider>
       </LangProvider>
