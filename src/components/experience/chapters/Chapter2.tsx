@@ -89,6 +89,11 @@ function ProjectPlane({
 
   useEffect(() => () => { texture.dispose() }, [texture])
 
+  // Reset cursor if this plane unmounts while hovered
+  useEffect(() => {
+    return () => { document.body.style.cursor = 'auto' }
+  }, [])
+
   // Z-lerp toward camera on hover
   useFrame(() => {
     if (!meshRef.current) return
@@ -113,15 +118,25 @@ function ProjectPlane({
 // ── Chapter 2 scene ────────────────────────────────────────────────────────
 export default function Chapter2() {
   const { camera } = useThree()
+  const { selectProject } = useProject()
 
   useEffect(() => {
     // Position camera behind start, then push in as flash fades
     camera.position.set(0, 0, 14)
     camera.rotation.set(0, 0, 0)
     const flash = document.querySelector<HTMLDivElement>('[data-flash]')
-    gsap.to(camera.position, { z: 10, duration: 0.6, ease: 'power2.out', delay: 0.05 })
+    const cameraTween = gsap.to(camera.position, { z: 10, duration: 0.6, ease: 'power2.out', delay: 0.05 })
     if (flash) gsap.to(flash, { opacity: 0, duration: 0.4, ease: 'power2.out', delay: 0.05 })
+    return () => { cameraTween.kill() }
   }, [camera])
+
+  // Clear selected project and reset cursor when Chapter2 unmounts
+  useEffect(() => {
+    return () => {
+      selectProject(null)
+      document.body.style.cursor = 'auto'
+    }
+  }, [selectProject])
 
   return (
     <>

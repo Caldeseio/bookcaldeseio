@@ -16,6 +16,8 @@ export default function ChapterTransitionSequence({ flashRef }: Props) {
     const flash = flashRef.current
     if (!flash) return
 
+    gsap.killTweensOf(camera.position)  // stop any competing chapter tween
+
     const startZ = camera.position.z
     const tl = gsap.timeline()
 
