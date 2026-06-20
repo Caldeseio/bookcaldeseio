@@ -25,6 +25,7 @@ export default function BookExperience() {
       {/* DOM flash overlay — animated by GSAP during scene transitions */}
       <div
         ref={flashRef}
+        data-flash
         style={{
           position: 'absolute', inset: 0,
           background: '#F1EDE3',
