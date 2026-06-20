@@ -30,7 +30,7 @@ function FloatingCode() {
   return (
     <points ref={ref}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" array={positions} count={count} itemSize={3} />
+        <bufferAttribute attach="attributes-position" array={positions} count={count} itemSize={3} args={[positions, 3]} />
       </bufferGeometry>
       <pointsMaterial color="#4F9D5B" size={0.05} transparent opacity={0.55} />
     </points>
