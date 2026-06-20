@@ -5,6 +5,9 @@ import ChapterTransitionSequence from './ChapterTransitionSequence'
 import Chapter1 from './chapters/Chapter1'
 import Chapter2 from './chapters/Chapter2'
 import Chapter3 from './chapters/Chapter3'
+import Chapter4 from './chapters/Chapter4'
+import Chapter5 from './chapters/Chapter5'
+import Chapter6 from './chapters/Chapter6'
 
 interface Props { flashRef: React.RefObject<HTMLDivElement | null> }
 
@@ -21,7 +24,9 @@ export default function SceneRenderer({ flashRef }: Props) {
       {currentChapter === 1 && <Chapter1 />}
       {currentChapter === 2 && <Chapter2 />}
       {currentChapter === 3 && <Chapter3 />}
-      {/* Chapters 4-6 added in Phase 3 */}
+      {currentChapter === 4 && <Chapter4 />}
+      {currentChapter === 5 && <Chapter5 />}
+      {currentChapter === 6 && <Chapter6 />}
       {showChapterTransition && <ChapterTransitionSequence flashRef={flashRef} />}
     </>
   )
