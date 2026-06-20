@@ -1,15 +1,22 @@
 'use client'
 
+import Desk from './Desk'
+import SceneLighting from './SceneLighting'
+import ScenePostProcessing from './ScenePostProcessing'
+
 interface Props { flashRef: React.RefObject<HTMLDivElement | null> }
 
 export default function BookScene({ flashRef: _ }: Props) {
   return (
     <>
-      <ambientLight intensity={0.3} color="#F1EDE3" />
-      <mesh position={[0, 0, 0]}>
-        <boxGeometry args={[2, 2.8, 0.3]} />
-        <meshStandardMaterial color="#1B2B1E" />
+      <SceneLighting />
+      <Desk />
+      {/* Book geometry added in Task 8 */}
+      <mesh position={[0, 0.4, 0]} castShadow>
+        <boxGeometry args={[2, 2.8, 0.32]} />
+        <meshStandardMaterial color="#1B2B1E" roughness={0.55} />
       </mesh>
+      <ScenePostProcessing />
     </>
   )
 }
