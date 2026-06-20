@@ -1,4 +1,4 @@
-export type ChapterIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6
+export type ChapterIndex = 0 | 1 | 2 | 3 | 4
 export type Lang = 'es' | 'en'
 export type SkillBranch = 'backend' | 'frontend' | 'data' | 'devops'
 

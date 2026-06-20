@@ -7,11 +7,11 @@ export function useNavigationInput() {
   const lastWheelRef = useRef(0)
 
   useEffect(() => {
-    // Chapter 0 = book intro. Keyboard/scroll only active in chapters 1-6.
+    // Chapter 0 = book intro. Keyboard/scroll only active in chapters 1-4.
     if (currentChapter === 0 || isTransitioning) return
 
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight' && currentChapter < 6) {
+      if (e.key === 'ArrowRight' && currentChapter < 4) {
         navigateTo((currentChapter + 1) as ChapterIndex)
       }
       if (e.key === 'ArrowLeft' && currentChapter > 1) {
@@ -23,7 +23,7 @@ export function useNavigationInput() {
       const now = Date.now()
       if (now - lastWheelRef.current < 900) return  // debounce — avoid skipping chapters
       lastWheelRef.current = now
-      if (e.deltaY > 40 && currentChapter < 6) {
+      if (e.deltaY > 40 && currentChapter < 4) {
         navigateTo((currentChapter + 1) as ChapterIndex)
       }
       if (e.deltaY < -40 && currentChapter > 1) {

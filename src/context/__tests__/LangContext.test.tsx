@@ -9,6 +9,8 @@ function Probe() {
       <span data-testid="lang">{lang}</span>
       <span data-testid="title">{t('book.title')}</span>
       <span data-testid="missing">{t('no.such.key')}</span>
+      <span data-testid="ch1title">{t('ch1.title')}</span>
+      <span data-testid="ch4title">{t('ch4.title')}</span>
       <button onClick={toggleLang}>toggle</button>
     </div>
   )
@@ -31,5 +33,13 @@ describe('LangContext', () => {
     const { getByTestId, getByText } = render(<LangProvider><Probe /></LangProvider>)
     act(() => getByText('toggle').click())
     expect(getByTestId('lang').textContent).toBe('en')
+  })
+  it('t() returns ch1.title in Spanish', () => {
+    const { getByTestId } = render(<LangProvider><Probe /></LangProvider>)
+    expect(getByTestId('ch1title').textContent).toBe('El Analista')
+  })
+  it('t() returns ch4.title in Spanish', () => {
+    const { getByTestId } = render(<LangProvider><Probe /></LangProvider>)
+    expect(getByTestId('ch4title').textContent).toBe('El Futuro')
   })
 })

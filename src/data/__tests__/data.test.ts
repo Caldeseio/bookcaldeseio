@@ -4,7 +4,7 @@ import { PROJECTS } from '../projects'
 import { SKILLS } from '../skills'
 
 describe('CHAPTERS', () => {
-  it('has 7 entries (index 0-6)', () => expect(CHAPTERS).toHaveLength(7))
+  it('has 5 entries (index 0-4)', () => expect(CHAPTERS).toHaveLength(5))
   it('each has index, roman, titleKey, subtitleKey, narrativeKeys', () => {
     CHAPTERS.forEach(c => {
       expect(c).toHaveProperty('index')
@@ -16,6 +16,11 @@ describe('CHAPTERS', () => {
   })
   it('index values match position', () => {
     CHAPTERS.forEach((c, i) => expect(c.index).toBe(i))
+  })
+  it('chapter 4 has roman IV', () => expect(CHAPTERS[4].roman).toBe('IV'))
+  it('no chapter has index 5 or 6', () => {
+    expect(CHAPTERS.find(c => c.index === 5)).toBeUndefined()
+    expect(CHAPTERS.find(c => c.index === 6)).toBeUndefined()
   })
 })
 
