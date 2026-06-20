@@ -10,13 +10,13 @@ export default function BookExperience() {
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
       <Canvas
-        camera={{ position: [0, 2, 8], fov: 60 }}
+        camera={{ position: [0, 2, 8], fov: 55 }}
         style={{ position: 'absolute', inset: 0, zIndex: 0 }}
         gl={{ antialias: true, alpha: false }}
         dpr={[1, 2]}
         shadows
       >
-        <color attach="background" args={['#2C3A2E']} />
+        <color attach="background" args={['#1E2820']} />
         <Suspense fallback={null}>
           <SceneRenderer flashRef={flashRef} />
         </Suspense>
