@@ -7,7 +7,7 @@ import { CHAPTERS } from '@/data/chapters'
 import type { ChapterIndex } from '@/types'
 
 export default function ChapterNav() {
-  const { currentChapter, navigateTo, isTransitioning } = useChapter()
+  const { currentChapter, navigateTo, isTransitioning, completeTransition } = useChapter()
   const { t } = useLang()
   const [hovered, setHovered] = useState<number | null>(null)
 
@@ -30,7 +30,17 @@ export default function ChapterNav() {
                     </motion.span>
                   )}
                 </AnimatePresence>
-                <button onClick={() => !isTransitioning && navigateTo(idx)} aria-label={`Chapter ${CHAPTERS[idx].roman}`}
+                <button onClick={() => {
+                  if (!isTransitioning) {
+                    navigateTo(idx)
+                    if (currentChapter > 0) {
+                      // No animated transition for inter-chapter nav in Phase 1 — complete immediately.
+                      // setTimeout(0) ensures navigateTo's state updates are committed before
+                      // completeTransition reads pendingChapter via its functional updater.
+                      setTimeout(completeTransition, 0)
+                    }
+                  }
+                }} aria-label={`Chapter ${CHAPTERS[idx].roman}`}
                   style={{ width: active ? '10px' : '7px', height: active ? '10px' : '7px', borderRadius: '50%', background: active ? '#C9A84C' : 'transparent', border: `1.5px solid ${active ? '#C9A84C' : 'rgba(241,237,227,0.3)'}`, boxShadow: active ? '0 0 8px #C9A84C88' : 'none', cursor: 'pointer', transition: 'all 0.25s ease', padding: 0 }} />
               </div>
             )

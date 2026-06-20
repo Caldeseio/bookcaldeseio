@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Float } from '@react-three/drei'
 import * as THREE from 'three'
 import { useLang } from '@/context/LangContext'
@@ -15,14 +15,24 @@ export default function TheBook({ onOpen }: Props) {
   const spineTex = useBookSpineTexture()
 
   // BoxGeometry face order: +X, -X, +Y, -Y, +Z (front/cover), -Z (back)
-  const materials = [
+  // useMemo prevents re-creating GPU material objects on every render frame (~60fps inside <Float>)
+  const materials = useMemo(() => [
     new THREE.MeshStandardMaterial({ map: spineTex, roughness: 0.5 }),
     new THREE.MeshStandardMaterial({ color: '#F1EDE3', roughness: 0.9 }),  // page edges
     new THREE.MeshStandardMaterial({ color: '#C9A84C', metalness: 0.5, roughness: 0.25 }),  // gilt top
     new THREE.MeshStandardMaterial({ color: '#C9A84C', metalness: 0.5, roughness: 0.25 }),  // gilt bottom
     new THREE.MeshStandardMaterial({ map: coverTex, roughness: 0.4 }),
     new THREE.MeshStandardMaterial({ color: '#1B2B1E', roughness: 0.7 }),
-  ]
+  ], [spineTex, coverTex])
+
+  // Dispose textures on GPU when they change or component unmounts
+  useEffect(() => () => {
+    coverTex.dispose()
+  }, [coverTex])
+
+  useEffect(() => () => {
+    spineTex.dispose()
+  }, [spineTex])
 
   return (
     <Float speed={1.4} rotationIntensity={0.12} floatIntensity={0.35}>
