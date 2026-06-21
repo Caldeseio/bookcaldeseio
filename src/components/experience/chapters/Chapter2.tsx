@@ -1,157 +1,198 @@
 'use client'
-import { useRef, useMemo, useState, useEffect } from 'react'
+import { useRef, useMemo, useEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import gsap from 'gsap'
-import { useLang } from '@/context/LangContext'
 import { useProject } from '@/context/ProjectContext'
 import { PROJECTS } from '@/data/projects'
-import type { Project } from '@/types'
 
-const TECH_ITEMS = [
-  { label: 'PHP',        color: '#7A86B8' },
-  { label: 'Laravel',    color: '#FF4433' },
-  { label: 'JavaScript', color: '#F7DF1E' },
-  { label: 'SQL Server', color: '#CC2927' },
-  { label: 'React',      color: '#61DAFB' },
-  { label: 'Node.js',    color: '#68A063' },
+const TECH_NODES = [
+  { label: 'PHP',        color: '#7A86B8', pos: [-0.9, 1.0, 0.2] as [number, number, number] },
+  { label: 'Laravel',    color: '#FF4433', pos: [ 0.8, 0.6, 0.1] as [number, number, number] },
+  { label: 'JavaScript', color: '#F7DF1E', pos: [ 1.6, 1.8,-0.1] as [number, number, number] },
+  { label: 'React',      color: '#61DAFB', pos: [-0.2, 2.4, 0.3] as [number, number, number] },
+  { label: 'SQL',        color: '#CC2927', pos: [-1.7, 1.8, 0.2] as [number, number, number] },
+  { label: 'Node.js',    color: '#68A063', pos: [ 0.3, 3.2,-0.2] as [number, number, number] },
 ]
 
-const CARD_POSITIONS: [number, number, number][] = [
-  [-3.6, 0.6, 2],
-  [0,   -0.6, 3],
-  [3.6,  0.6, 2],
-]
+// Connection pairs as index pairs
+const CONNECTIONS = [
+  [0, 1], [0, 4], [1, 2], [2, 3], [3, 5], [4, 3], [5, 2],
+] as [number, number][]
 
-// ── Tech sprite (faces camera automatically via THREE.Sprite) ──────────────
-function TechSprite({ label, color, index, total }: { label: string; color: string; index: number; total: number }) {
-  const ref = useRef<THREE.Sprite>(null)
+// ── Single tech orb ───────────────────────────────────────────────────────────
+function TechOrb({ node, index }: { node: typeof TECH_NODES[0]; index: number }) {
+  const meshRef = useRef<THREE.Mesh>(null)
 
-  const texture = useMemo(() => {
-    const c = document.createElement('canvas'); c.width = 256; c.height = 96
+  const labelTex = useMemo(() => {
+    const c = document.createElement('canvas'); c.width = 192; c.height = 64
     const ctx = c.getContext('2d')!
-    ctx.fillStyle = 'rgba(27,43,30,0.92)'; ctx.fillRect(0, 0, 256, 96)
-    ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.strokeRect(4, 4, 248, 88)
-    ctx.fillStyle = color; ctx.font = 'bold 30px sans-serif'
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-    ctx.fillText(label, 128, 48)
+    ctx.fillStyle = 'rgba(27,43,30,0.88)'; ctx.fillRect(0, 0, 192, 64)
+    ctx.strokeStyle = node.color; ctx.lineWidth = 2
+    ctx.strokeRect(2, 2, 188, 60)
+    ctx.fillStyle = node.color; ctx.font = 'bold 20px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    ctx.fillText(node.label, 96, 32)
     return new THREE.CanvasTexture(c)
-  }, [label, color])
+  }, [node.color, node.label])
 
-  useEffect(() => () => { texture.dispose() }, [texture])
+  useEffect(() => () => { labelTex.dispose() }, [labelTex])
 
-  useFrame(() => {
-    if (!ref.current) return
-    const angle = Date.now() * 0.00028 + (index / total) * Math.PI * 2
-    ref.current.position.set(
-      Math.cos(angle) * 5.5,
-      Math.sin(angle * 0.4) * 2.2,
-      Math.sin(angle) * 2.8 - 1
-    )
+  useFrame((state) => {
+    if (!meshRef.current) return
+    const mat = meshRef.current.material as THREE.MeshStandardMaterial
+    const base = 0.45
+    mat.emissiveIntensity = base + Math.sin(state.clock.elapsedTime * 2.2 + index * 1.1) * 0.2
   })
 
   return (
-    <sprite ref={ref} scale={[2.1, 0.79, 1]}>
-      <spriteMaterial map={texture} transparent opacity={0.9} depthWrite={false} />
-    </sprite>
+    <group position={node.pos}>
+      <mesh ref={meshRef}>
+        <sphereGeometry args={[0.25, 12, 12]} />
+        <meshStandardMaterial
+          color={node.color}
+          emissive={node.color}
+          emissiveIntensity={0.45}
+          roughness={0.3}
+          metalness={0.1}
+        />
+      </mesh>
+      {/* Label sprite above orb */}
+      <sprite position={[0, 0.5, 0]} scale={[1.4, 0.47, 1]}>
+        <spriteMaterial map={labelTex} transparent depthWrite={false} />
+      </sprite>
+    </group>
   )
 }
 
-// ── Clickable project card plane ───────────────────────────────────────────
-function ProjectPlane({
-  project, position
-}: {
-  project: Project
-  position: [number, number, number]
-}) {
-  const meshRef = useRef<THREE.Mesh>(null)
-  const [hovered, setHovered] = useState(false)
-  const { t } = useLang()
+// ── Connection lines between orbs ─────────────────────────────────────────────
+function ConnectionLines() {
+  const geo = useMemo(() => {
+    const points: number[] = []
+    CONNECTIONS.forEach(([a, b]) => {
+      const pa = TECH_NODES[a].pos
+      const pb = TECH_NODES[b].pos
+      points.push(...pa, ...pb)
+    })
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.Float32BufferAttribute(points, 3))
+    return g
+  }, [])
+
+  useEffect(() => () => { geo.dispose() }, [geo])
+
+  return (
+    <lineSegments geometry={geo}>
+      <lineBasicMaterial color="#AFC3B2" transparent opacity={0.35} />
+    </lineSegments>
+  )
+}
+
+// ── Code rain particles drifting down from above ──────────────────────────────
+function CodeRain() {
+  const count = 120
+  const ref = useRef<THREE.Points>(null)
+
+  const positions = useMemo(() => {
+    const arr = new Float32Array(count * 3)
+    for (let i = 0; i < count; i++) {
+      arr[i * 3]     = (Math.random() - 0.5) * 5.0   // x: ±2.5
+      arr[i * 3 + 1] = 4.5 + Math.random() * 1.5     // y: 4.5–6
+      arr[i * 3 + 2] = (Math.random() - 0.5) * 2.0   // z: ±1
+    }
+    return arr
+  }, [])
+
+  useFrame((_, delta) => {
+    if (!ref.current) return
+    const pos = ref.current.geometry.attributes.position as THREE.BufferAttribute
+    for (let i = 0; i < count; i++) {
+      pos.array[i * 3 + 1] -= delta * 0.9
+      if ((pos.array[i * 3 + 1] as number) < -0.5) {
+        pos.array[i * 3 + 1] = 5 + Math.random() * 1.5
+      }
+    }
+    pos.needsUpdate = true
+  })
+
+  return (
+    <points ref={ref}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+      </bufferGeometry>
+      <pointsMaterial color="#4F9D5B" size={0.035} transparent opacity={0.28} sizeAttenuation />
+    </points>
+  )
+}
+
+// ── Featured project card ─────────────────────────────────────────────────────
+function ProjectCard() {
   const { selectProject } = useProject()
+  const project = PROJECTS[0]
 
   const texture = useMemo(() => {
     const c = document.createElement('canvas'); c.width = 512; c.height = 308
     const ctx = c.getContext('2d')!
     ctx.fillStyle = '#1B2B1E'; ctx.fillRect(0, 0, 512, 308)
-    ctx.strokeStyle = '#C9A84C'; ctx.lineWidth = 3; ctx.strokeRect(6, 6, 500, 296)
-    // Title
-    ctx.fillStyle = '#C9A84C'
-    ctx.font = 'bold 24px sans-serif'; ctx.textAlign = 'center'
-    ctx.fillText(t(project.titleKey), 256, 72)
-    // Tech
-    ctx.fillStyle = '#AFC3B2'; ctx.font = '16px monospace'
-    ctx.fillText(project.tech.slice(0, 4).join('  ·  '), 256, 130)
-    // CTA
-    ctx.fillStyle = 'rgba(201,168,76,0.65)'; ctx.font = '13px monospace'
-    ctx.fillText('▶  click to open', 256, 220)
+    ctx.strokeStyle = '#C9A84C'; ctx.lineWidth = 3; ctx.strokeRect(4, 4, 504, 300)
+    ctx.fillStyle = '#C9A84C'; ctx.font = 'bold 20px sans-serif'; ctx.textAlign = 'left'
+    ctx.fillText('Sistema de Planilla', 20, 38)
+    ctx.fillStyle = '#AFC3B2'; ctx.font = '14px monospace'; ctx.textAlign = 'left'
+    ctx.fillText('PHP · Laravel · MariaDB · REST API', 20, 68)
+    ctx.fillStyle = 'rgba(201,168,76,0.55)'; ctx.font = '12px monospace'
+    ctx.fillText('→ Ver proyecto', 20, 280)
     return new THREE.CanvasTexture(c)
-  }, [project, t])
+  }, [])
 
   useEffect(() => () => { texture.dispose() }, [texture])
 
-  // Reset cursor if this plane unmounts while hovered
-  useEffect(() => {
-    return () => { document.body.style.cursor = 'auto' }
-  }, [])
-
-  // Z-lerp toward camera on hover
-  useFrame(() => {
-    if (!meshRef.current) return
-    const targetZ = hovered ? position[2] + 2 : position[2]
-    meshRef.current.position.z = THREE.MathUtils.lerp(meshRef.current.position.z, targetZ, 0.08)
-  })
-
   return (
     <mesh
-      ref={meshRef}
-      position={position}
-      onPointerOver={() => { setHovered(true); document.body.style.cursor = 'pointer' }}
-      onPointerOut={() => { setHovered(false); document.body.style.cursor = 'auto' }}
+      position={[-1.8, 2.2, -1.2]}
+      rotation={[0, 0.18, 0]}
       onClick={() => selectProject(project)}
+      onPointerOver={() => { document.body.style.cursor = 'pointer' }}
+      onPointerOut={() => { document.body.style.cursor = 'auto' }}
     >
-      <planeGeometry args={[3.4, 2.05]} />
+      <planeGeometry args={[3.0, 1.8]} />
       <meshBasicMaterial map={texture} transparent side={THREE.DoubleSide} />
     </mesh>
   )
 }
 
-// ── Chapter 2 scene ────────────────────────────────────────────────────────
+// ── Chapter 2 root ─────────────────────────────────────────────────────────────
 export default function Chapter2() {
   const { camera } = useThree()
   const { selectProject } = useProject()
 
   useEffect(() => {
-    // Position camera behind start, then push in as flash fades
-    camera.position.set(0, 0, 14)
-    camera.rotation.set(0, 0, 0)
-    const flash = document.querySelector<HTMLDivElement>('[data-flash]')
-    const cameraTween = gsap.to(camera.position, { z: 10, duration: 0.6, ease: 'power2.out', delay: 0.05 })
-    if (flash) gsap.to(flash, { opacity: 0, duration: 0.4, ease: 'power2.out', delay: 0.05 })
-    return () => { cameraTween.kill() }
-  }, [camera])
+    camera.position.set(2, 5, 9)
+    camera.rotation.set(-0.4, 0.1, 0)
+    gsap.killTweensOf(camera.position)
 
-  // Clear selected project and reset cursor when Chapter2 unmounts
-  useEffect(() => {
+    const flash = document.querySelector<HTMLDivElement>('[data-flash]')
+    const cam = gsap.to(camera.position, { x: 0, y: 4.5, z: 8, duration: 0.9, ease: 'power2.out', delay: 0.1 })
+    if (flash) gsap.to(flash, { opacity: 0, duration: 0.55, ease: 'power2.out', delay: 0.1 })
+
     return () => {
+      cam.kill()
       selectProject(null)
       document.body.style.cursor = 'auto'
     }
-  }, [selectProject])
+  }, [camera, selectProject])
 
   return (
     <>
-      <ambientLight intensity={0.12} color="#F1EDE3" />
-      <pointLight position={[0, 5, 7]} intensity={1.4} color="#C9A84C" />
-      <pointLight position={[-5, 2, 4]} intensity={0.7} color="#4F9D5B" />
-      <pointLight position={[5, 2, 4]} intensity={0.5} color="#6FB877" />
+      <ambientLight intensity={0.32} color="#1B2B1E" />
+      <pointLight position={[0, 8, 3]} intensity={2.2} color="#C9A84C" />
+      <pointLight position={[4, 2, 2]} intensity={1.0} color="#7A86B8" />
+      <pointLight position={[-4, 3, 2]} intensity={0.6} color="#4F9D5B" />
 
-      {TECH_ITEMS.map((item, i) => (
-        <TechSprite key={item.label} {...item} index={i} total={TECH_ITEMS.length} />
+      {TECH_NODES.map((node, i) => (
+        <TechOrb key={node.label} node={node} index={i} />
       ))}
-
-      {PROJECTS.slice(0, 3).map((project, i) => (
-        <ProjectPlane key={project.id} project={project} position={CARD_POSITIONS[i]} />
-      ))}
+      <ConnectionLines />
+      <CodeRain />
+      <ProjectCard />
     </>
   )
 }
