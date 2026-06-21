@@ -39,33 +39,20 @@ export default function MagicBook3D({ cvData, onStateChange }: MagicBook3DProps)
   const pointLightRef = useRef<THREE.PointLight>(null);
   const autoRotY = useRef(0);
   const liftY = useRef(0);
+  const transitionTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Notify parent of state changes
   useEffect(() => {
     onStateChange?.(bookState);
   }, [bookState, onStateChange]);
 
-  // ─── Page navigation ───────────────────────────────────────────────────────
+  // ─── Unmount cleanup for transition timeout ────────────────────────────────
 
-  const nextPage = () => {
-    if (currentPage < LEAF_COUNT) {
-      playPageFlip();
-      setCurrentPage((p) => p + 1);
-    }
-  };
-
-  const prevPage = () => {
-    if (currentPage > 0) {
-      playPageFlip();
-      setCurrentPage((p) => p - 1);
-    }
-  };
-
-  const closeBook = () => {
-    setBookState('closing');
-    setCurrentPage(0);
-    setTimeout(() => setBookState('idle'), 800);
-  };
+  useEffect(() => {
+    return () => {
+      if (transitionTimeout.current) clearTimeout(transitionTimeout.current);
+    };
+  }, []);
 
   // ─── Leaf click handler ────────────────────────────────────────────────────
 
@@ -74,7 +61,8 @@ export default function MagicBook3D({ cvData, onStateChange }: MagicBook3DProps)
       setBookState('opening');
       playPageFlip();
       setCurrentPage(1);
-      setTimeout(() => setBookState('reading'), 800);
+      if (transitionTimeout.current) clearTimeout(transitionTimeout.current);
+      transitionTimeout.current = setTimeout(() => setBookState('reading'), 800);
     } else if (bookState === 'reading') {
       const newPage = leafIndex + 1;
       if (newPage !== currentPage) {
@@ -87,6 +75,33 @@ export default function MagicBook3D({ cvData, onStateChange }: MagicBook3DProps)
   // ─── Keyboard handling ────────────────────────────────────────────────────
 
   useEffect(() => {
+    const nextPage = () => {
+      setCurrentPage((p) => {
+        if (p < LEAF_COUNT) {
+          playPageFlip();
+          return p + 1;
+        }
+        return p;
+      });
+    };
+
+    const prevPage = () => {
+      setCurrentPage((p) => {
+        if (p > 0) {
+          playPageFlip();
+          return p - 1;
+        }
+        return p;
+      });
+    };
+
+    const closeBook = () => {
+      setCurrentPage(0);
+      setBookState('closing');
+      if (transitionTimeout.current) clearTimeout(transitionTimeout.current);
+      transitionTimeout.current = setTimeout(() => setBookState('idle'), 800);
+    };
+
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight') nextPage();
       if (e.key === 'ArrowLeft') prevPage();
@@ -94,7 +109,7 @@ export default function MagicBook3D({ cvData, onStateChange }: MagicBook3DProps)
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [currentPage, bookState]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   // ─── Animation loop ───────────────────────────────────────────────────────
 
