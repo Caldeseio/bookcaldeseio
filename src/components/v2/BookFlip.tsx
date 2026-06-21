@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import * as THREE from 'three';
 import {
   Bone,
@@ -16,12 +16,12 @@ import {
   Vector3,
   CanvasTexture,
 } from 'three';
-
-const { degToRad } = MathUtils;
 import { useFrame } from '@react-three/fiber';
 import { easing } from 'maath';
 import { generatePageTexture, PageTextureData } from './PageTextureGenerator';
 import { bookPages, LEAF_COUNT } from '../../data/v2/bookPages';
+
+const { degToRad } = MathUtils;
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -234,6 +234,12 @@ export default function BookFlip({
       return tex;
     });
   }, [cvData]);
+
+  useEffect(() => {
+    return () => {
+      textures.forEach(tex => tex.dispose());
+    };
+  }, [textures]);
 
   return (
     <group>
