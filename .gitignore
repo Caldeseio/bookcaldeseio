@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# reference project files
+Three.JS-Book-extracted/
+Three.JS-Book-main.zip
