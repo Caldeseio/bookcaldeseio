@@ -1,139 +1,303 @@
 'use client'
 import { useRef, useMemo, useEffect, useState } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
+import { AnimatePresence, motion } from 'framer-motion'
 import * as THREE from 'three'
 import gsap from 'gsap'
-import { useProject } from '@/context/ProjectContext'
-import { PROJECTS } from '@/data/projects'
-import type { Project } from '@/types'
+import { useChapter } from '@/context/ChapterContext'
+import { useLang } from '@/context/LangContext'
+import { useNote } from '@/context/NoteContext'
 
-const SPINE_COLORS = ['#C9A84C', '#4F9D5B', '#6FB877', '#AFC3B2', '#C9A84C', '#4F9D5B']
-const BOOK_X_POSITIONS = [-5, -3, -1, 1, 3, 5]
+// ── Deterministic seeded random ───────────────────────────────────────────────
+const seededRandom = (seed: number) =>
+  (((Math.sin(seed) * 9301 + 49297) % 233280) + 233280) % 233280 / 233280
 
-// ── InstancedMesh background library shelves ──────────────────────────────────
-function LibraryBackground() {
-  const meshRef = useRef<THREE.InstancedMesh>(null)
-
-  const { positions, scales } = useMemo(() => {
-    const positions: [number, number, number][] = []
-    const scales: [number, number, number][] = []
-    for (let row = 0; row < 4; row++) {
-      const y = -0.6 + row * 1.9
-      for (let col = 0; col < 11; col++) {
-        const x = (col - 5) * 2.2
-        for (let d = 0; d < 5; d++) {
-          positions.push([x + (Math.random() - 0.5) * 0.25, y, -4 - d * 3.8])
-          scales.push([0.28 + Math.random() * 0.18, 1.4 + Math.random() * 0.9, 0.12])
-        }
-      }
-    }
-    return { positions, scales }
+// ── Neural network constellation ──────────────────────────────────────────────
+function NeuralNet() {
+  const nodes = useMemo(() => {
+    return Array.from({ length: 20 }, (_, i) => {
+      const phi   = seededRandom(i * 2) * Math.PI
+      const theta = seededRandom(i * 2 + 1) * Math.PI * 2
+      const r     = 1.2 + seededRandom(i * 3) * 1.4
+      return new THREE.Vector3(
+        r * Math.sin(phi) * Math.cos(theta),
+        r * Math.cos(phi) * 0.6 + 2.0,
+        r * Math.sin(phi) * Math.sin(theta) * 0.4,
+      )
+    })
   }, [])
 
-  useEffect(() => {
-    if (!meshRef.current) return
-    const mat = new THREE.Matrix4()
-    positions.forEach((pos, i) => {
-      mat.compose(
-        new THREE.Vector3(pos[0], pos[1], pos[2]),
-        new THREE.Quaternion(),
-        new THREE.Vector3(scales[i][0], scales[i][1], scales[i][2])
-      )
-      meshRef.current!.setMatrixAt(i, mat)
+  const { edgeGeo, colors } = useMemo(() => {
+    const pts: number[] = []
+    nodes.forEach((a, i) => {
+      nodes.forEach((b, j) => {
+        if (j <= i) return
+        if (a.distanceTo(b) < 1.5) { pts.push(a.x, a.y, a.z, b.x, b.y, b.z) }
+      })
     })
-    meshRef.current.instanceMatrix.needsUpdate = true
-  }, [positions, scales])
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3))
+    // Even/odd color arrays for nodes (gold / cyan)
+    const colors = nodes.map((_, i) => (i % 2 === 0 ? '#C9A84C' : '#61DAFB'))
+    return { edgeGeo: g, colors }
+  }, [nodes])
+
+  const nodeRefs = useRef<(THREE.Mesh | null)[]>([])
+
+  useEffect(() => () => { edgeGeo.dispose() }, [edgeGeo])
+
+  useFrame((state) => {
+    nodeRefs.current.forEach((mesh, i) => {
+      if (!mesh) return
+      const mat = mesh.material as THREE.MeshStandardMaterial
+      const base = i % 2 === 0 ? 0.45 : 0.35
+      mat.emissiveIntensity = base + Math.sin(state.clock.elapsedTime * 1.6 + i * 0.8) * 0.28
+    })
+  })
 
   return (
-    <instancedMesh ref={meshRef} args={[undefined, undefined, positions.length]}>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color="#2A382C" roughness={0.88} />
+    <>
+      <lineSegments geometry={edgeGeo}>
+        <lineBasicMaterial color="#AFC3B2" transparent opacity={0.22} />
+      </lineSegments>
+      {nodes.map((pos, i) => (
+        <mesh
+          key={i}
+          position={pos.toArray()}
+          ref={(el) => { nodeRefs.current[i] = el }}
+        >
+          <sphereGeometry args={[0.12, 8, 8]} />
+          <meshStandardMaterial
+            color={colors[i]}
+            emissive={colors[i]}
+            emissiveIntensity={i % 2 === 0 ? 0.45 : 0.35}
+            roughness={0.3}
+          />
+        </mesh>
+      ))}
+    </>
+  )
+}
+
+// ── Gold drifting particles ────────────────────────────────────────────────────
+function GoldParticles() {
+  const count = 80
+  const meshRef = useRef<THREE.InstancedMesh>(null)
+  const dummy = useMemo(() => new THREE.Object3D(), [])
+
+  const { positions, speeds } = useMemo(() => {
+    const positions = new Float32Array(count * 3)
+    const speeds = new Float32Array(count)
+    for (let i = 0; i < count; i++) {
+      positions[i * 3]     = (Math.random() - 0.5) * 10
+      positions[i * 3 + 1] = Math.random() * 10
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 10
+      speeds[i] = 0.4 + Math.random() * 0.6
+    }
+    return { positions, speeds }
+  }, [])
+
+  useFrame((_, delta) => {
+    if (!meshRef.current) return
+    for (let i = 0; i < count; i++) {
+      positions[i * 3 + 1] += speeds[i] * delta * 0.55
+      if (positions[i * 3 + 1] > 7) positions[i * 3 + 1] = -3
+
+      dummy.position.set(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2])
+      dummy.scale.setScalar(0.06)
+      dummy.updateMatrix()
+      meshRef.current.setMatrixAt(i, dummy.matrix)
+    }
+    meshRef.current.instanceMatrix.needsUpdate = true
+  })
+
+  return (
+    <instancedMesh ref={meshRef} args={[undefined, undefined, count]}>
+      <sphereGeometry args={[1, 6, 6]} />
+      <meshStandardMaterial color="#C9A84C" emissive="#C9A84C" emissiveIntensity={0.85} />
     </instancedMesh>
   )
 }
 
-// ── Single interactive feature book ──────────────────────────────────────────
-function FeatureBook({ project, index, spineColor }: { project: Project; index: number; spineColor: string }) {
-  const meshRef = useRef<THREE.Mesh>(null)
-  const { selectProject } = useProject()
-  const hoveredRef = useRef(false)
-  const [hovered, setHovered] = useState(false)
+// ── Contact overlay panel ─────────────────────────────────────────────────────
+const CONTACT_LINKS = [
+  { label: 'Email',     value: 'luiscalderontcit@gmail.com',  href: 'mailto:luiscalderontcit@gmail.com' },
+  { label: 'LinkedIn',  value: 'linkedin.com/in/caldeseio',   href: 'https://linkedin.com/in/caldeseio' },
+  { label: 'GitHub',    value: 'github.com/Caldeseio',        href: 'https://github.com/Caldeseio' },
+  { label: 'Instagram', value: '@caldeseio',                   href: 'https://instagram.com/caldeseio' },
+]
 
-  const texture = useMemo(() => {
-    const c = document.createElement('canvas'); c.width = 128; c.height = 512
-    const ctx = c.getContext('2d')!
-    ctx.fillStyle = '#1B2B1E'; ctx.fillRect(0, 0, 128, 512)
-    ctx.fillStyle = spineColor; ctx.fillRect(0, 0, 128, 88)
-    ctx.fillStyle = '#1B2B1E'; ctx.font = 'bold 42px monospace'
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-    ctx.fillText(String(project.id).padStart(2, '0'), 64, 44)
-    ctx.strokeStyle = spineColor; ctx.lineWidth = 2
-    ctx.beginPath(); ctx.moveTo(12, 96); ctx.lineTo(116, 96); ctx.stroke()
-    return new THREE.CanvasTexture(c)
-  }, [project.id, spineColor])
-
-  useEffect(() => () => { texture.dispose() }, [texture])
+function ContactOverlay() {
+  const { currentChapter } = useChapter()
+  const { t } = useLang()
+  const { addNote } = useNote()
+  const [input, setInput] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    document.body.style.cursor = hovered ? 'pointer' : 'auto'
-    return () => { document.body.style.cursor = 'auto' }
-  }, [hovered])
+    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
+  }, [])
 
-  useFrame((_, delta) => {
-    if (!meshRef.current) return
-    const baseZ = 1.5 - (Math.abs(BOOK_X_POSITIONS[index]) / 10) * 0.3
-    const targetZ = hoveredRef.current ? baseZ + 1.0 : baseZ
-    meshRef.current.position.z += (targetZ - meshRef.current.position.z) * Math.min(delta * 5, 1)
-  })
+  const handleSubmit = () => {
+    if (!input.trim()) return
+    addNote()
+    setInput('')
+    setSubmitted(true)
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => setSubmitted(false), 2500)
+  }
 
   return (
-    <mesh
-      ref={meshRef}
-      position={[BOOK_X_POSITIONS[index], 1.25, 1.5]}
-      onPointerOver={() => { hoveredRef.current = true; setHovered(true) }}
-      onPointerOut={() => { hoveredRef.current = false; setHovered(false) }}
-      onClick={() => selectProject(project)}
-    >
-      <boxGeometry args={[0.7, 2.5, 0.14]} />
-      <meshStandardMaterial
-        map={texture}
-        roughness={0.65}
-        emissive={spineColor}
-        emissiveIntensity={hovered ? 0.38 : 0.08}
-      />
-    </mesh>
+    <AnimatePresence>
+      {currentChapter === 4 && (
+        <motion.div
+          initial={{ x: 80, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: 80, opacity: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          style={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            width: 'min(380px, 90vw)',
+            height: '100%',
+            background: 'rgba(13,26,15,0.85)',
+            backdropFilter: 'blur(12px)',
+            zIndex: 40,
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '48px 32px',
+            gap: 16,
+            overflowY: 'auto',
+            color: '#F1EDE3',
+            fontFamily: 'sans-serif',
+          }}
+        >
+          <div style={{ fontSize: 11, letterSpacing: 4, color: '#C9A84C', fontFamily: 'monospace' }}>
+            CHAPTER IV
+          </div>
+
+          <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0, lineHeight: 1.3 }}>
+            {t('ch4.line1')}
+          </h2>
+          <p style={{ fontSize: 14, color: '#AFC3B2', margin: 0, lineHeight: 1.6 }}>
+            {t('ch4.line2')}
+          </p>
+
+          <div style={{ height: 1, background: 'rgba(201,168,76,0.3)', margin: '8px 0' }} />
+
+          {CONTACT_LINKS.map(link => (
+            <div key={link.label}>
+              <div style={{ fontSize: 10, letterSpacing: 2, color: '#C9A84C', fontFamily: 'monospace', marginBottom: 2 }}>
+                {link.label}
+              </div>
+              <a
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: '#F1EDE3', fontSize: 13, textDecoration: 'none' }}
+              >
+                {link.value}
+              </a>
+            </div>
+          ))}
+
+          <a
+            href="/pdf/CV_Luis_Calderon.pdf"
+            download
+            style={{
+              display: 'inline-block',
+              marginTop: 8,
+              padding: '10px 20px',
+              border: '1px solid #C9A84C',
+              color: '#C9A84C',
+              fontSize: 12,
+              textDecoration: 'none',
+              letterSpacing: 2,
+              fontFamily: 'monospace',
+              alignSelf: 'flex-start',
+            }}
+          >
+            ↓ Descargar CV
+          </a>
+
+          <div style={{ height: 1, background: 'rgba(201,168,76,0.3)', margin: '8px 0' }} />
+          <div style={{ fontSize: 11, letterSpacing: 3, color: '#C9A84C', fontFamily: 'monospace' }}>
+            {t('ch4.cta')} ✧
+          </div>
+
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleSubmit() }}
+              placeholder={t('ch4.placeholder')}
+              style={{
+                flex: 1,
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(201,168,76,0.35)',
+                color: '#F1EDE3',
+                padding: '8px 12px',
+                fontSize: 13,
+                outline: 'none',
+                fontFamily: 'sans-serif',
+              }}
+            />
+            <button
+              onClick={handleSubmit}
+              aria-label={submitted ? '✓' : '→'}
+              style={{
+                background: submitted ? '#4F9D5B' : 'transparent',
+                border: '1px solid #C9A84C',
+                color: '#C9A84C',
+                padding: '8px 16px',
+                cursor: 'pointer',
+                fontSize: 16,
+                transition: 'background 0.3s',
+              }}
+            >
+              {submitted ? '✓' : '→'}
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   )
 }
 
 // ── Chapter 4 root ─────────────────────────────────────────────────────────────
 export default function Chapter4() {
   const { camera } = useThree()
-  const { selectProject } = useProject()
 
   useEffect(() => {
-    camera.position.set(0, 1, 10)
+    camera.position.set(0, 5, 9)
+    camera.rotation.set(-0.42, 0, 0)
     gsap.killTweensOf(camera.position)
-    const cameraTween = gsap.to(camera.position, { z: 7, duration: 0.7, ease: 'power2.out', delay: 0.05 })
-    const flash = document.querySelector('[data-flash]') as HTMLElement | null
-    if (flash) gsap.to(flash, { opacity: 0, duration: 0.4, delay: 0.1 })
-    return () => { cameraTween.kill(); selectProject(null) }
-  }, [camera, selectProject])
+
+    const flash = document.querySelector<HTMLDivElement>('[data-flash]')
+    const cam = gsap.to(camera.position, { y: 4.5, z: 8, duration: 1.0, ease: 'power2.out', delay: 0.1 })
+    if (flash) gsap.to(flash, { opacity: 0, duration: 0.55, ease: 'power2.out', delay: 0.1 })
+
+    return () => { cam.kill() }
+  }, [camera])
 
   return (
     <>
-      <ambientLight intensity={0.18} color="#1B2B1E" />
-      <pointLight position={[0, 9, 0]} intensity={1.8} color="#C9A84C" distance={22} decay={2} />
-      <pointLight position={[-9, 4, 2]} intensity={0.7} color="#4F9D5B" distance={16} decay={2} />
-      <pointLight position={[9, 4, 2]} intensity={0.7} color="#4F9D5B" distance={16} decay={2} />
-      {/* Floor */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -8]}>
-        <planeGeometry args={[50, 40]} />
-        <meshStandardMaterial color="#0D1A0F" roughness={1} />
-      </mesh>
-      <LibraryBackground />
-      {PROJECTS.map((project, i) => (
-        <FeatureBook key={project.id} project={project} index={i} spineColor={SPINE_COLORS[i]} />
-      ))}
+      <ambientLight intensity={0.28} color="#0D1A1F" />
+      <spotLight
+        position={[0, 10, 2]}
+        angle={0.38}
+        penumbra={0.9}
+        intensity={3.0}
+        color="#61DAFB"
+      />
+      <pointLight position={[0, 5, 4]} intensity={1.8} color="#C9A84C" />
+      <pointLight position={[-4, 3, 2]} intensity={0.5} color="#4F9D5B" />
+
+      <NeuralNet />
+      <GoldParticles />
+      <ContactOverlay />
     </>
   )
 }
