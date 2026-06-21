@@ -27,9 +27,9 @@ export default function GoldenCompass() {
       emissiveIntensity: 0.3,
     })
     const mesh = new THREE.Mesh(geo, mat)
-    compassGroup.add(mesh)
+    // NOTE: do NOT add to group here — StrictMode runs useMemo twice, causing double-add
     return { mesh, geo, mat }
-  }, [compassGroup])
+  }, [])
 
   const arms = useMemo(() => ARM_ANGLES.map((a) => {
     // Arm cylinder
@@ -38,23 +38,29 @@ export default function GoldenCompass() {
     const arm    = new THREE.Mesh(armGeo, armMat)
     arm.rotation.z = a
     arm.position.set(Math.cos(a) * 0.9, Math.sin(a) * 0.9, 0)
-    compassGroup.add(arm)
+    // NOTE: do NOT add to group here — StrictMode runs useMemo twice, causing double-add
 
     // Endpoint sphere
     const endGeo = new THREE.SphereGeometry(0.22, 10, 10)
     const endMat = new THREE.MeshToonMaterial({ color: AMBER })
     const end    = new THREE.Mesh(endGeo, endMat)
     end.position.set(Math.cos(a) * ARM_LENGTH, Math.sin(a) * ARM_LENGTH, 0)
-    compassGroup.add(end)
 
     return { arm, end, armGeo, armMat, endGeo, endMat }
-  }), [compassGroup])
+  }), [])
 
   useEffect(() => {
     const parentGroup = groupRef.current
     if (parentGroup && typeof (parentGroup as THREE.Group).add === 'function') {
       parentGroup.add(compassGroup)
     }
+
+    // Add children to compassGroup inside useEffect (safe from StrictMode double-invoke)
+    compassGroup.add(centerMesh.mesh)
+    arms.forEach(({ arm, end }) => {
+      compassGroup.add(arm)
+      compassGroup.add(end)
+    })
 
     // GSAP entrance
     compassGroup.scale.set(0, 0, 0)
@@ -74,9 +80,12 @@ export default function GoldenCompass() {
     return () => {
       gsap.killTweensOf(compassGroup.scale)
       gsap.killTweensOf(compassGroup.rotation)
+      compassGroup.remove(centerMesh.mesh)
       centerMesh.geo.dispose()
       centerMesh.mat.dispose()
-      arms.forEach(({ armGeo, armMat, endGeo, endMat }) => {
+      arms.forEach(({ arm, end, armGeo, armMat, endGeo, endMat }) => {
+        compassGroup.remove(arm)
+        compassGroup.remove(end)
         armGeo.dispose()
         armMat.dispose()
         endGeo.dispose()

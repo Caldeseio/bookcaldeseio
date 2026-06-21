@@ -4,18 +4,18 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import gsap from 'gsap'
 
-const GOLD  = '#C9A84C'
-const AMBER = '#E8903A'
-const SAGE  = '#4F9D5B'
-const RUST  = '#8B3A2A'
+const GOLD       = '#C9A84C'
+const AMBER      = '#E8903A'
+const WARM_GREEN = '#7A8C3E'  // warm olive — replaces cold SAGE
+const RUST       = '#8B3A2A'
 
 const PLANETS = [
-  { label: 'PHP',     pos: [-1.2, 2.2, -0.5] as [number, number, number], color: GOLD  },
-  { label: 'Laravel', pos: [-0.2, 2.8, -0.3] as [number, number, number], color: RUST  },
-  { label: 'JS',      pos: [ 0.8, 2.3, -0.4] as [number, number, number], color: AMBER },
-  { label: 'React',   pos: [-0.8, 3.2, -0.2] as [number, number, number], color: SAGE  },
-  { label: 'SQL',     pos: [ 0.2, 2.1, -0.6] as [number, number, number], color: RUST  },
-  { label: 'Node',    pos: [ 1.4, 2.9, -0.3] as [number, number, number], color: SAGE  },
+  { label: 'PHP',     pos: [-1.2, 2.2, -0.5] as [number, number, number], color: GOLD       },
+  { label: 'Laravel', pos: [-0.2, 2.8, -0.3] as [number, number, number], color: RUST        },
+  { label: 'JS',      pos: [ 0.8, 2.3, -0.4] as [number, number, number], color: AMBER       },
+  { label: 'React',   pos: [-0.8, 3.2, -0.2] as [number, number, number], color: WARM_GREEN  },
+  { label: 'SQL',     pos: [ 0.2, 2.1, -0.6] as [number, number, number], color: RUST        },
+  { label: 'Node',    pos: [ 1.4, 2.9, -0.3] as [number, number, number], color: WARM_GREEN  },
 ]
 
 export default function StoryPlanets() {
@@ -58,8 +58,8 @@ export default function StoryPlanets() {
     })
 
     return () => {
-      gsap.killTweensOf(planets.map(p => p.mesh.scale))
-      gsap.killTweensOf(planets.map(p => p.mesh.position))
+      planets.forEach(p => gsap.killTweensOf(p.mesh.scale))
+      planets.forEach(p => gsap.killTweensOf(p.mesh.position))
       planets.forEach(({ geo, mat }) => {
         geo.dispose()
         mat.dispose()
