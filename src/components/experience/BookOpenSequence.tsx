@@ -22,8 +22,8 @@ export default function BookOpenSequence({ flashRef, shouldPlay }: Props) {
     const tl = gsap.timeline({ onComplete: completeTransition })
 
     // Camera lifts to reading position — book remains visible below
-    tl.to(camera.position, { x: 0, y: 4.5, z: 9, duration: 1.4, ease: 'power2.inOut' }, 0)
-    tl.to(camera.rotation, { x: -0.38, y: 0, z: 0, duration: 1.4, ease: 'power2.inOut' }, 0)
+    tl.to(camera.position, { x: 0, y: 1.8, z: 7, duration: 1.4, ease: 'power2.inOut' }, 0)
+    tl.to(camera.rotation, { x: -0.2, y: 0, z: 0, duration: 1.4, ease: 'power2.inOut' }, 0)
     tl.fromTo(flash, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: 'power2.in' }, 1.0)
 
     return () => { tl.kill() }

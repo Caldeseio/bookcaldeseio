@@ -3,17 +3,16 @@
 export default function SceneLighting() {
   return (
     <>
-      <ambientLight intensity={0.12} color="#F1EDE3" />
+      <ambientLight intensity={0.25} color="#F8E4A0" />
       <spotLight
-        position={[4, 9, 5]}
-        angle={0.38}
-        penumbra={0.65}
-        intensity={4}
+        position={[3, 8, 4]}
+        angle={0.42}
+        penumbra={0.6}
+        intensity={3.5}
         color="#FFD98A"
         castShadow
-        shadow-mapSize={[1024, 1024]}
       />
-      <pointLight position={[-3, 2, -2]} intensity={0.5} color="#4F9D5B" />
+      <pointLight position={[-2, 3, 2]} intensity={0.5} color="#E8903A" />
     </>
   )
 }
