@@ -101,6 +101,8 @@ function Page({ number, frontDraw, backDraw, page, opened, bookClosed }: PagePro
   const turnedAt = useRef(0)
   const lastOpened = useRef(opened)
   const skinnedMeshRef = useRef<THREE.SkinnedMesh>(null!)
+  const frontMatRef = useRef<THREE.MeshStandardMaterial | null>(null)
+  const backMatRef  = useRef<THREE.MeshStandardMaterial | null>(null)
   const [highlighted, setHighlighted] = useState(false)
   useCursor(highlighted)
 
@@ -108,11 +110,13 @@ function Page({ number, frontDraw, backDraw, page, opened, bookClosed }: PagePro
   const frontTexture = useMemo(() => new THREE.CanvasTexture(frontDraw()), [frontDraw])
   const backTexture  = useMemo(() => new THREE.CanvasTexture(backDraw()),  [backDraw])
 
-  // Dispose textures on unmount
+  // Dispose textures and materials on unmount
   useEffect(() => {
     return () => {
       frontTexture.dispose()
       backTexture.dispose()
+      frontMatRef.current?.dispose()
+      backMatRef.current?.dispose()
     }
   }, [frontTexture, backTexture])
 
@@ -132,22 +136,26 @@ function Page({ number, frontDraw, backDraw, page, opened, bookClosed }: PagePro
     }
     const skeleton = new THREE.Skeleton(bones)
 
+    const frontMat = new THREE.MeshStandardMaterial({
+      color: whiteColor,
+      map: frontTexture,
+      roughness: 0.1,
+      emissive: new THREE.Color('orange'),
+      emissiveIntensity: 0,
+    })
+    frontMatRef.current = frontMat
+    const backMat = new THREE.MeshStandardMaterial({
+      color: whiteColor,
+      map: backTexture,
+      roughness: 0.1,
+      emissive: new THREE.Color('orange'),
+      emissiveIntensity: 0,
+    })
+    backMatRef.current = backMat
     const materials = [
       ...pageMaterials,
-      new THREE.MeshStandardMaterial({
-        color: whiteColor,
-        map: frontTexture,
-        roughness: 0.1,
-        emissive: new THREE.Color('orange'),
-        emissiveIntensity: 0,
-      }),
-      new THREE.MeshStandardMaterial({
-        color: whiteColor,
-        map: backTexture,
-        roughness: 0.1,
-        emissive: new THREE.Color('orange'),
-        emissiveIntensity: 0,
-      }),
+      frontMat,
+      backMat,
     ]
 
     const mesh = new THREE.SkinnedMesh(pageGeometry, materials)
@@ -160,15 +168,15 @@ function Page({ number, frontDraw, backDraw, page, opened, bookClosed }: PagePro
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [frontTexture, backTexture])
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     if (!skinnedMeshRef.current) return
 
     if (lastOpened.current !== opened) {
-      turnedAt.current = +new Date()
+      turnedAt.current = state.clock.elapsedTime * 1000
       lastOpened.current = opened
     }
 
-    let turningTime = Math.min(400, new Date().getTime() - turnedAt.current) / 400
+    let turningTime = Math.min(400, state.clock.elapsedTime * 1000 - turnedAt.current) / 400
     turningTime = Math.sin(turningTime * Math.PI)
 
     let targetRotation = opened ? -Math.PI / 2 : Math.PI / 2
@@ -236,7 +244,7 @@ function Page({ number, frontDraw, backDraw, page, opened, bookClosed }: PagePro
         if (opened) {
           navigateTo(Math.max(0, currentChapter - 1) as ChapterIndex)
         } else {
-          navigateTo(Math.min(4, currentChapter + 1) as ChapterIndex)
+          navigateTo(Math.min(TOTAL_PAGES - 1, currentChapter + 1) as ChapterIndex)
         }
       }}
     >
@@ -292,7 +300,7 @@ export default function BookReader() {
           backDraw={pageData.backDraw}
           page={delayedPage}
           opened={delayedPage > index}
-          bookClosed={delayedPage === 0 || delayedPage === 4}
+          bookClosed={delayedPage === 0}
         />
       ))}
     </group>

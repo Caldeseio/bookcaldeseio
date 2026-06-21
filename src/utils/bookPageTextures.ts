@@ -532,7 +532,7 @@ export function drawCh3Right(): HTMLCanvasElement {
   ctx.fillRect(40, 66, 200, 1.5)
 
   // Dark widget panel
-  ctx.fillStyle = '#1B2B1E'
+  ctx.fillStyle = '#1A0E08'  // warm dark brown instead of cold dark green
   ctx.fillRect(30, 85, 452, 185)
   ctx.strokeStyle = GOLD
   ctx.lineWidth = 2

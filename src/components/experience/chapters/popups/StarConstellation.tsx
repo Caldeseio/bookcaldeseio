@@ -90,8 +90,8 @@ export default function StarConstellation() {
     })
 
     return () => {
-      gsap.killTweensOf(stars.map(s => s.mat))
-      gsap.killTweensOf(stars.map(s => s.mesh.scale))
+      stars.forEach(s => gsap.killTweensOf(s.mat))
+      stars.forEach(s => gsap.killTweensOf(s.mesh.scale))
       stars.forEach(({ geo, mat }) => {
         geo.dispose()
         mat.dispose()
@@ -103,10 +103,9 @@ export default function StarConstellation() {
 
   useFrame((state) => {
     const t = state.clock.elapsedTime
-    stars.forEach(({ mesh, mat }, i) => {
+    stars.forEach(({ mat }, i) => {
       ;(mat as THREE.MeshToonMaterial).emissiveIntensity =
         0.3 + Math.sin(t * 1.4 + i * 0.7) * 0.2
-      void mesh
     })
   })
 

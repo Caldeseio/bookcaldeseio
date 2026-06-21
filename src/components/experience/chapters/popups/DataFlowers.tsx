@@ -4,16 +4,16 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import gsap from 'gsap'
 
-const GOLD  = '#C9A84C'
-const AMBER = '#E8903A'
-const SAGE  = '#4F9D5B'
+const GOLD       = '#C9A84C'
+const AMBER      = '#E8903A'
+const WARM_GREEN = '#7A8C3E'  // warm olive — replaces cold SAGE
 
 const SKILLS = [
-  { label: 'Power BI',   pct: 0.90, stemColor: SAGE, topColor: GOLD  },
-  { label: 'MySQL',      pct: 0.90, stemColor: SAGE, topColor: SAGE  },
-  { label: 'Python',     pct: 0.88, stemColor: SAGE, topColor: AMBER },
-  { label: 'SQL Server', pct: 0.70, stemColor: SAGE, topColor: GOLD  },
-  { label: 'R',          pct: 0.66, stemColor: SAGE, topColor: AMBER },
+  { label: 'Power BI',   pct: 0.90, stemColor: WARM_GREEN, topColor: GOLD       },
+  { label: 'MySQL',      pct: 0.90, stemColor: WARM_GREEN, topColor: WARM_GREEN  },
+  { label: 'Python',     pct: 0.88, stemColor: WARM_GREEN, topColor: AMBER       },
+  { label: 'SQL Server', pct: 0.70, stemColor: WARM_GREEN, topColor: GOLD        },
+  { label: 'R',          pct: 0.66, stemColor: WARM_GREEN, topColor: AMBER       },
 ]
 
 const MAX_HEIGHT = 2.5
@@ -34,6 +34,7 @@ export default function DataFlowers() {
     stem.position.set(X_POSITIONS[i], stemHeight / 2, -0.3)
     stem.scale.y = 0
     top.position.set(X_POSITIONS[i], stemHeight, -0.3)
+    top.scale.set(0, 0, 0)  // start invisible alongside stem
     return { stem, top, stemGeo, topGeo, stemMat, topMat, stemHeight }
   }), [])
 
@@ -47,18 +48,25 @@ export default function DataFlowers() {
       })
     }
 
-    // GSAP entrance: stems grow upward (staggered)
-    flowers.forEach(({ stem }, i) => {
+    // GSAP entrance: stems grow upward (staggered), heads pop in when stem finishes
+    flowers.forEach(({ stem, top }, i) => {
       gsap.to(stem.scale, {
         y: 1,
         duration: 1.4,
         ease: 'elastic.out(1, 0.5)',
         delay: i * 0.15,
       })
+      gsap.to(top.scale, {
+        x: 1, y: 1, z: 1,
+        duration: 0.6,
+        ease: 'back.out(1.7)',
+        delay: i * 0.15 + 0.8,
+      })
     })
 
     return () => {
-      gsap.killTweensOf(flowers.map(f => f.stem.scale))
+      flowers.forEach(f => gsap.killTweensOf(f.stem.scale))
+      flowers.forEach(f => gsap.killTweensOf(f.top.scale))
       flowers.forEach(({ stemGeo, topGeo, stemMat, topMat }) => {
         stemGeo.dispose()
         topGeo.dispose()
@@ -68,10 +76,10 @@ export default function DataFlowers() {
     }
   }, [flowers])
 
-  useFrame((state, delta) => {
+  useFrame((state) => {
     const t = state.clock.elapsedTime
     flowers.forEach(({ top, stemHeight }, i) => {
-      const bob = Math.sin(t * 1.2 + i * 0.8) * 0.003 * delta * 60
+      const bob = Math.sin(t * 1.2 + i * 0.8) * 0.003  // constant amplitude, frame-rate independent
       top.position.y = stemHeight + bob
     })
   })
