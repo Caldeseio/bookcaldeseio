@@ -16,7 +16,7 @@ export default function BookExperience() {
         dpr={[1, 2]}
         shadows
       >
-        <color attach="background" args={['#1E2820']} />
+        <color attach="background" args={['#13100A']} />
         <Suspense fallback={null}>
           <SceneRenderer flashRef={flashRef} />
         </Suspense>
