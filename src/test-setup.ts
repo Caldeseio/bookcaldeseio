@@ -27,6 +27,8 @@ HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
   rotate: vi.fn(),
   clearRect: vi.fn(),
   arc: vi.fn(),
+  fill: vi.fn(),
   closePath: vi.fn(),
   measureText: vi.fn(() => ({ width: 100 })),
+  strokeRect: vi.fn(),
 }) as unknown as typeof HTMLCanvasElement.prototype.getContext
