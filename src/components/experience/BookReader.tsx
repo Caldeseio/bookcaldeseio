@@ -262,6 +262,16 @@ export default function BookReader() {
   const { currentChapter } = useChapter()
   const [delayedPage, setDelayedPage] = useState<ChapterIndex>(currentChapter)
 
+  // Clear the flash overlay that BookOpenSequence animates to opacity 1
+  useEffect(() => {
+    const flash = document.querySelector<HTMLDivElement>('[data-flash]')
+    if (flash) {
+      import('gsap').then(({ default: gsap }) => {
+        gsap.to(flash, { opacity: 0, duration: 0.4, ease: 'power2.out', delay: 0.15 })
+      })
+    }
+  }, [])
+
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout>
     const goToPage = () => {

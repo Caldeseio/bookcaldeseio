@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useChapter } from '@/context/ChapterContext'
 import Desk from './Desk'
-import SceneLighting from './SceneLighting'
 import ScenePostProcessing from './ScenePostProcessing'
 import TheBook from './TheBook'
 import BookOpenSequence from './BookOpenSequence'
@@ -21,7 +20,6 @@ export default function BookScene({ flashRef }: Props) {
 
   return (
     <>
-      <SceneLighting />
       <Desk />
       <TheBook onOpen={handleOpen} />
       <BookOpenSequence flashRef={flashRef} shouldPlay={playOpen} />

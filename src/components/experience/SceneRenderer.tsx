@@ -3,6 +3,7 @@ import { useChapter } from '@/context/ChapterContext'
 import BookScene from './BookScene'
 import BookReader from './BookReader'
 import ChapterTransitionSequence from './ChapterTransitionSequence'
+import SceneLighting from './SceneLighting'
 import DataFlowers from './chapters/popups/DataFlowers'
 import StoryPlanets from './chapters/popups/StoryPlanets'
 import GoldenCompass from './chapters/popups/GoldenCompass'
@@ -19,6 +20,7 @@ export default function SceneRenderer({ flashRef }: Props) {
 
   return (
     <>
+      <SceneLighting />
       {currentChapter === 0 && <BookScene flashRef={flashRef} />}
       {currentChapter >= 1 && <BookReader />}
       {currentChapter === 1 && <DataFlowers />}
