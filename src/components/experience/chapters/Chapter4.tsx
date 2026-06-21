@@ -127,7 +127,7 @@ const CONTACT_LINKS = [
   { label: 'Instagram', value: '@caldeseio',                   href: 'https://instagram.com/caldeseio' },
 ]
 
-function ContactOverlay() {
+export function ContactOverlay() {
   const { currentChapter } = useChapter()
   const { t } = useLang()
   const { addNote } = useNote()
@@ -297,7 +297,6 @@ export default function Chapter4() {
 
       <NeuralNet />
       <GoldParticles />
-      <ContactOverlay />
     </>
   )
 }
