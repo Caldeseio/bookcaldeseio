@@ -1,6 +1,6 @@
 import { render, fireEvent, screen } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import Chapter4 from '../Chapter4'
+import Chapter4, { ContactOverlay } from '../Chapter4'
 
 vi.mock('@react-three/fiber', () => ({
   useFrame: vi.fn(),
@@ -87,12 +87,12 @@ describe('Chapter4', () => {
   })
 
   it('renders "CHAPTER IV" label when currentChapter is 4', () => {
-    render(<Chapter4 />)
+    render(<ContactOverlay />)
     expect(screen.getByText('CHAPTER IV')).toBeInTheDocument()
   })
 
   it('calls addNote when a note is submitted with text', () => {
-    render(<Chapter4 />)
+    render(<ContactOverlay />)
     const input = screen.getByPlaceholderText('ch4.placeholder')
     fireEvent.change(input, { target: { value: 'Hola mundo' } })
     fireEvent.click(screen.getByRole('button', { name: '→' }))
