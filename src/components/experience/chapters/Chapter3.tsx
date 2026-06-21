@@ -4,135 +4,104 @@ import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import gsap from 'gsap'
 
-const BAR_DATA = [
-  { label: 'Power BI', value: 0.90, color: '#C9A84C' },
-  { label: 'MySQL',    value: 0.90, color: '#4F9D5B' },
-  { label: 'Python',   value: 0.88, color: '#6FB877' },
-  { label: 'SQL Srv',  value: 0.70, color: '#6FB877' },
-  { label: 'R',        value: 0.66, color: '#AFC3B2' },
-]
+const HUB_POS = new THREE.Vector3(0, 2.5, 0)
+const ORBIT_R = 2.4
+const NODE_ANGLES = [0, Math.PI * 0.4, Math.PI * 0.8, Math.PI * 1.2, Math.PI * 1.6]
+const COMPANY_LABELS = ['Empresa A', 'Empresa B', 'Empresa C', 'Empresa D', 'Empresa E']
 
-const MAX_H = 5
-const BAR_SPACING = 2.8
-const BAR_W = 1.6
+function nodePos(angle: number, idx: number): THREE.Vector3 {
+  return new THREE.Vector3(
+    Math.cos(angle) * ORBIT_R,
+    2.0 + idx * 0.2,
+    Math.sin(angle) * ORBIT_R * 0.5,  // flatten z for better readability
+  )
+}
 
-// ── Single animated bar ────────────────────────────────────────────────────
-function DataBar({ label, value, color, index, total }: {
-  label: string; value: number; color: string; index: number; total: number
-}) {
+// ── Central platform hub ──────────────────────────────────────────────────────
+function HubSphere() {
   const meshRef = useRef<THREE.Mesh>(null)
-  const h = value * MAX_H
-  const x = (index - Math.floor(total / 2)) * BAR_SPACING
 
-  useEffect(() => {
+  useFrame((state) => {
     if (!meshRef.current) return
-    // Start flat on floor: scale.y=0.001 and position.y=0
-    meshRef.current.scale.y = 0.001
-    meshRef.current.position.y = 0
-    // Animate: scale.y → 1 and position.y → h/2 (pivot at center, bar rises from floor)
-    const t1 = gsap.to(meshRef.current.scale, { y: 1, duration: 1.1, delay: index * 0.18 + 0.25, ease: 'power3.out' })
-    const t2 = gsap.to(meshRef.current.position, { y: h / 2, duration: 1.1, delay: index * 0.18 + 0.25, ease: 'power3.out' })
-    return () => { t1.kill(); t2.kill() }
-  }, [h, index])
+    const mat = meshRef.current.material as THREE.MeshStandardMaterial
+    mat.emissiveIntensity = 0.4 + Math.sin(state.clock.elapsedTime * 1.8) * 0.25
+  })
 
   return (
-    <mesh ref={meshRef} position={[x, 0, 0]} castShadow>
-      <boxGeometry args={[BAR_W, h, BAR_W]} />
-      <meshStandardMaterial color={color} roughness={0.35} metalness={0.12} emissive={color} emissiveIntensity={0.18} />
+    <mesh ref={meshRef} position={HUB_POS.toArray()}>
+      <sphereGeometry args={[0.45, 20, 20]} />
+      <meshStandardMaterial
+        color="#C9A84C"
+        emissive="#C9A84C"
+        emissiveIntensity={0.4}
+        roughness={0.25}
+        metalness={0.3}
+      />
     </mesh>
   )
 }
 
-// ── Connection line between bar tops ──────────────────────────────────────
-function ConnectionLines() {
-  const geo = useMemo(() => {
-    const pts = BAR_DATA.map((bar, i) => {
-      const x = (i - Math.floor(BAR_DATA.length / 2)) * BAR_SPACING
-      return new THREE.Vector3(x, bar.value * MAX_H, 0)
+// ── Company nodes + spokes ────────────────────────────────────────────────────
+function CompanyNetwork() {
+  const spokeGeo = useMemo(() => {
+    const pts: number[] = []
+    NODE_ANGLES.forEach((angle, i) => {
+      const np = nodePos(angle, i)
+      pts.push(HUB_POS.x, HUB_POS.y, HUB_POS.z, np.x, np.y, np.z)
     })
-    return new THREE.BufferGeometry().setFromPoints(pts)
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3))
+    return g
   }, [])
 
-  useEffect(() => () => { geo.dispose() }, [geo])
+  useEffect(() => () => { spokeGeo.dispose() }, [spokeGeo])
 
   return (
-    <line>
-      <primitive object={geo} attach="geometry" />
-      <lineBasicMaterial color="#AFC3B2" opacity={0.45} transparent />
-    </line>
+    <>
+      <lineSegments geometry={spokeGeo}>
+        <lineBasicMaterial color="#AFC3B2" transparent opacity={0.4} />
+      </lineSegments>
+      {NODE_ANGLES.map((angle, i) => {
+        const np = nodePos(angle, i)
+        return (
+          <mesh key={i} position={np.toArray()}>
+            <sphereGeometry args={[0.20, 10, 10]} />
+            <meshStandardMaterial
+              color="#4F9D5B"
+              emissive="#4F9D5B"
+              emissiveIntensity={0.22}
+              roughness={0.4}
+            />
+          </mesh>
+        )
+      })}
+    </>
   )
 }
 
-// ── Dashboard plane (background) ──────────────────────────────────────────
-function DashboardPlane() {
-  const texture = useMemo(() => {
-    const c = document.createElement('canvas'); c.width = 1024; c.height = 512
-    const ctx = c.getContext('2d')!
-    ctx.fillStyle = '#0D1B0F'; ctx.fillRect(0, 0, 1024, 512)
-    // Grid
-    ctx.strokeStyle = 'rgba(79,157,91,0.18)'; ctx.lineWidth = 1
-    for (let x = 0; x < 1024; x += 64) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 512); ctx.stroke() }
-    for (let y = 0; y < 512; y += 64) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(1024, y); ctx.stroke() }
-    // Header
-    ctx.fillStyle = '#C9A84C'; ctx.font = 'bold 38px sans-serif'; ctx.textAlign = 'center'
-    ctx.fillText('DATA ANALYTICS', 512, 58)
-    ctx.fillStyle = 'rgba(201,168,76,0.4)'; ctx.fillRect(80, 72, 864, 2)
-    // Metric rows
-    const metrics = [
-      { label: 'Power BI', val: '90%', color: '#C9A84C' },
-      { label: 'MySQL',    val: '90%', color: '#4F9D5B' },
-      { label: 'Python',   val: '88%', color: '#6FB877' },
-      { label: 'R',        val: '66%', color: '#AFC3B2' },
-    ]
-    metrics.forEach((m, i) => {
-      const y = 122 + i * 56
-      ctx.fillStyle = m.color; ctx.font = 'bold 20px sans-serif'; ctx.textAlign = 'left'
-      ctx.fillText(m.label, 100, y)
-      // Bar
-      ctx.fillStyle = m.color + '55'; ctx.fillRect(260, y - 18, 560, 24)
-      ctx.fillStyle = m.color + 'CC'; ctx.fillRect(260, y - 18, parseFloat(m.val) * 5.6, 24)
-      ctx.fillStyle = '#F1EDE3'; ctx.textAlign = 'right'; ctx.font = 'bold 18px monospace'
-      ctx.fillText(m.val, 900, y)
-    })
-    return new THREE.CanvasTexture(c)
-  }, [])
-
-  useEffect(() => () => { texture.dispose() }, [texture])
-
-  return (
-    <mesh position={[0, 2.5, -6]}>
-      <planeGeometry args={[14, 7]} />
-      <meshBasicMaterial map={texture} transparent opacity={0.88} side={THREE.DoubleSide} />
-    </mesh>
-  )
-}
-
-// ── Directional data particles (horizontal streams) ───────────────────────
-function DataParticles() {
-  const count = 120
+// ── Data flow particles along spokes ──────────────────────────────────────────
+function FlowParticles() {
+  const count = 40
   const meshRef = useRef<THREE.InstancedMesh>(null)
 
-  const { positions, speeds } = useMemo(() => {
-    const positions = new Float32Array(count * 3)
-    const speeds = new Float32Array(count)
-    for (let i = 0; i < count; i++) {
-      positions[i * 3]     = (Math.random() - 0.5) * 18  // x
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 5   // y
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 6   // z
-      speeds[i] = 0.02 + Math.random() * 0.04
-    }
-    return { positions, speeds }
+  // t[i] is the particle's progress (0→1) along its spoke
+  const { nodePositions, t } = useMemo(() => {
+    const nodePositions = NODE_ANGLES.map((angle, i) => nodePos(angle, i))
+    const t = new Float32Array(count).map((_, i) => i / (count / NODE_ANGLES.length) % 1)
+    return { nodePositions, t }
   }, [])
 
   const dummy = useMemo(() => new THREE.Object3D(), [])
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     if (!meshRef.current) return
     for (let i = 0; i < count; i++) {
-      positions[i * 3] += speeds[i]
-      if (positions[i * 3] > 9) positions[i * 3] = -9
-      dummy.position.set(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2])
-      dummy.scale.set(0.06, 0.06, 0.06)
+      t[i] += delta * 0.45
+      if (t[i] > 1) t[i] = 0
+      const spokeIdx = Math.floor(i / (count / NODE_ANGLES.length)) % NODE_ANGLES.length
+      const target = nodePositions[spokeIdx]
+      dummy.position.lerpVectors(HUB_POS, target, t[i])
+      dummy.scale.setScalar(0.05)
       dummy.updateMatrix()
       meshRef.current.setMatrixAt(i, dummy.matrix)
     }
@@ -142,51 +111,99 @@ function DataParticles() {
   return (
     <instancedMesh ref={meshRef} args={[undefined, undefined, count]}>
       <sphereGeometry args={[1, 4, 4]} />
-      <meshBasicMaterial color="#4F9D5B" transparent opacity={0.6} />
+      <meshBasicMaterial color="#C9A84C" transparent opacity={0.7} />
     </instancedMesh>
   )
 }
 
-// ── Chapter 3 scene ────────────────────────────────────────────────────────
+// ── Attendance widget card ────────────────────────────────────────────────────
+function AttendanceCard() {
+  const texture = useMemo(() => {
+    const c = document.createElement('canvas'); c.width = 512; c.height = 300
+    const ctx = c.getContext('2d')!
+    ctx.fillStyle = '#1B2B1E'; ctx.fillRect(0, 0, 512, 300)
+    ctx.strokeStyle = '#C9A84C'; ctx.lineWidth = 3; ctx.strokeRect(4, 4, 504, 292)
+    // Header
+    ctx.fillStyle = '#C9A84C'; ctx.font = 'bold 22px sans-serif'; ctx.textAlign = 'center'
+    ctx.fillText('SISTEMA DE PLANILLA', 256, 44)
+    // Separator
+    ctx.fillStyle = 'rgba(201,168,76,0.35)'; ctx.fillRect(20, 58, 472, 2)
+    // Clock
+    ctx.fillStyle = '#F1EDE3'; ctx.font = 'bold 36px monospace'; ctx.textAlign = 'center'
+    ctx.fillText('09:00 AM', 256, 130)
+    // Employee count
+    ctx.fillStyle = '#4F9D5B'; ctx.font = 'bold 16px sans-serif'
+    ctx.fillText('247 empleados activos', 256, 176)
+    // Tags
+    ctx.fillStyle = 'rgba(175,195,178,0.7)'; ctx.font = '11px sans-serif'
+    ctx.fillText('Multi-tenant  ·  Biometría  ·  RRHH', 256, 240)
+    return new THREE.CanvasTexture(c)
+  }, [])
+
+  useEffect(() => () => { texture.dispose() }, [texture])
+
+  return (
+    <mesh position={[2.0, 1.8, -0.8]} rotation={[0, -0.2, 0]}>
+      <planeGeometry args={[2.4, 1.4]} />
+      <meshBasicMaterial map={texture} transparent opacity={0.93} side={THREE.DoubleSide} />
+    </mesh>
+  )
+}
+
+// ── Floating label Sprite ─────────────────────────────────────────────────────
+function FloatingLabel() {
+  const texture = useMemo(() => {
+    const c = document.createElement('canvas'); c.width = 320; c.height = 72
+    const ctx = c.getContext('2d')!
+    ctx.fillStyle = 'rgba(13,26,15,0.82)'; ctx.fillRect(0, 0, 320, 72)
+    ctx.fillStyle = '#F1EDE3'; ctx.font = 'bold 22px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    ctx.fillText('Multi-tenant SaaS', 160, 36)
+    return new THREE.CanvasTexture(c)
+  }, [])
+
+  useEffect(() => () => { texture.dispose() }, [texture])
+
+  return (
+    <sprite position={[0, 4.2, 0]} scale={[2.8, 0.63, 1]}>
+      <spriteMaterial map={texture} transparent depthWrite={false} />
+    </sprite>
+  )
+}
+
+// ── Chapter 3 root ─────────────────────────────────────────────────────────────
 export default function Chapter3() {
   const { camera } = useThree()
 
   useEffect(() => {
-    camera.position.set(0, 4, 18)
-    camera.rotation.set(-0.22, 0, 0)
-    const flash = document.querySelector<HTMLDivElement>('[data-flash]')
-    const cameraTween = gsap.to(camera.position, { z: 13, duration: 0.7, ease: 'power2.out', delay: 0.05 })
-    if (flash) gsap.to(flash, { opacity: 0, duration: 0.4, ease: 'power2.out', delay: 0.05 })
-    return () => { cameraTween.kill() }
-  }, [camera])
+    camera.position.set(-2, 5, 9)
+    camera.rotation.set(-0.4, -0.15, 0)
+    gsap.killTweensOf(camera.position)
 
-  // Slow camera pull-back during the scene for cinematic feel (clamped at z=17)
-  useFrame((_, delta) => {
-    if (camera.position.z < 17) {
-      camera.position.z = Math.min(camera.position.z + delta * 0.08, 17)
-    }
-  })
+    const flash = document.querySelector<HTMLDivElement>('[data-flash]')
+    const cam = gsap.to(camera.position, { x: 0, y: 4.5, z: 8, duration: 0.9, ease: 'power2.out', delay: 0.1 })
+    if (flash) gsap.to(flash, { opacity: 0, duration: 0.55, ease: 'power2.out', delay: 0.1 })
+
+    return () => { cam.kill() }
+  }, [camera])
 
   return (
     <>
-      <ambientLight intensity={0.08} color="#F1EDE3" />
-      <spotLight position={[0, 10, 6]} angle={0.5} intensity={3} color="#4F9D5B" castShadow />
-      <pointLight position={[-6, 3, 2]} intensity={0.8} color="#C9A84C" />
-      <pointLight position={[6, 3, 2]} intensity={0.8} color="#C9A84C" />
+      <ambientLight intensity={0.35} color="#1B2B1E" />
+      <spotLight
+        position={[0, 10, 0]}
+        angle={0.4}
+        penumbra={0.8}
+        intensity={3.0}
+        color="#4F9D5B"
+      />
+      <pointLight position={[-4, 4, 2]} intensity={0.8} color="#C9A84C" />
+      <pointLight position={[4, 3, 2]} intensity={0.6} color="#7A86B8" />
 
-      {/* Floor */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]} receiveShadow>
-        <planeGeometry args={[30, 20]} />
-        <meshStandardMaterial color="#0D1B0F" roughness={0.9} />
-      </mesh>
-
-      {BAR_DATA.map((bar, i) => (
-        <DataBar key={bar.label} {...bar} index={i} total={BAR_DATA.length} />
-      ))}
-
-      <ConnectionLines />
-      <DashboardPlane />
-      <DataParticles />
+      <HubSphere />
+      <CompanyNetwork />
+      <FlowParticles />
+      <AttendanceCard />
+      <FloatingLabel />
     </>
   )
 }
