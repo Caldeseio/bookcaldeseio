@@ -120,6 +120,9 @@ export default function MagicBook3D({ cvData, onStateChange }: MagicBook3DProps)
     if (bookState === 'idle' || bookState === 'hover') {
       autoRotY.current += 0.003;
       groupRef.current.rotation.y = autoRotY.current;
+    } else if (bookState === 'opening') {
+      // Lerp back to face the camera (Y rotation → 0)
+      groupRef.current.rotation.y += (0 - groupRef.current.rotation.y) * Math.min(1, delta * 4);
     }
 
     // Lift animation
