@@ -1,51 +1,88 @@
-'use client'
-import dynamic from 'next/dynamic'
-import { ChapterProvider } from '@/context/ChapterContext'
-import { LangProvider } from '@/context/LangContext'
-import { ProjectProvider } from '@/context/ProjectContext'
-import { TooltipProvider } from '@/context/TooltipContext'
-import { NoteProvider } from '@/context/NoteContext'
-import LangToggle from '@/components/ui/LangToggle'
-import EntryOverlay from '@/components/ui/EntryOverlay'
-import NarrativeText from '@/components/ui/NarrativeText'
-import ChapterNav from '@/components/ui/ChapterNav'
-import ProjectCard from '@/components/ui/ProjectCard'
-import SkillTooltip from '@/components/ui/SkillTooltip'
-import { ContactOverlay } from '@/components/experience/chapters/Chapter4'
-import { useNavigationInput } from '@/hooks/useNavigationInput'
+'use client';
 
-const BookExperience = dynamic(() => import('@/components/experience/BookExperience'), { ssr: false })
+import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
+import {
+  contact, summary, experience, education, certifications, languages,
+} from '../data/v2/cvData';
+import { SKILLS } from '../data/skills';
 
-function AppContent() {
-  useNavigationInput()
+// Dynamic imports — prevent SSR for Three.js
+const BookV2Experience = dynamic(() => import('../components/v2/BookV2Experience'), {
+  ssr: false,
+  loading: () => <LoadingScreen />,
+});
+
+const MobileBook = dynamic(() => import('../components/v2/MobileBook'), {
+  ssr: false,
+});
+
+function LoadingScreen() {
   return (
-    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', position: 'relative' }}>
-      <BookExperience />
-      <div style={{ position: 'absolute', top: 14, right: 14, zIndex: 30 }}>
-        <LangToggle />
-      </div>
-      <EntryOverlay />
-      <NarrativeText />
-      <ChapterNav />
-      <ProjectCard />
-      <SkillTooltip />
-      <ContactOverlay />
+    <div style={{
+      width: '100%',
+      height: '100vh',
+      background: '#0a1a0a',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: '#C9A24B',
+      fontFamily: "'Cinzel', serif",
+    }}>
+      <div style={{ fontSize: '28px', letterSpacing: '0.3em', marginBottom: '16px' }}>CALDESEIO</div>
+      <div style={{ fontSize: '12px', letterSpacing: '0.2em', opacity: 0.6 }}>Cargando el bosque encantado...</div>
     </div>
-  )
+  );
 }
 
-export default function Home() {
+export default function V2Page() {
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+  );
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+
+  useEffect(() => {
+    // Detect mobile
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+
+    // Load Google Fonts
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap';
+    link.onload = () => setFontsLoaded(true);
+    document.head.appendChild(link);
+    // Fallback: consider loaded after 1.2s even if font API is slow
+    const timeout = setTimeout(() => setFontsLoaded(true), 1200);
+
+    return () => {
+      window.removeEventListener('resize', check);
+      clearTimeout(timeout);
+    };
+  }, []);
+
+  // Build cvData object for components
+  const cvData = {
+    contact,
+    summary,
+    experience,
+    education,
+    certifications,
+    languages,
+    skills: SKILLS.map(s => ({ name: s.name, branch: s.branch })),
+  };
+
+  if (!fontsLoaded) return <LoadingScreen />;
+
+  if (isMobile) {
+    return <MobileBook cvData={cvData} />;
+  }
+
   return (
-    <ChapterProvider>
-      <LangProvider>
-        <ProjectProvider>
-          <TooltipProvider>
-            <NoteProvider>
-              <AppContent />
-            </NoteProvider>
-          </TooltipProvider>
-        </ProjectProvider>
-      </LangProvider>
-    </ChapterProvider>
-  )
+    <div style={{ width: '100%', height: '100vh', overflow: 'hidden' }}>
+      <BookV2Experience cvData={cvData} />
+    </div>
+  );
 }
