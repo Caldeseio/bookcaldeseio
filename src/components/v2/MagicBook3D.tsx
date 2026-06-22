@@ -38,16 +38,23 @@ export default function MagicBook3D({ cvData, onStateChange }: MagicBook3DProps)
   const groupRef = useRef<THREE.Group>(null);
   const pointLightRef = useRef<THREE.PointLight>(null);
   const autoRotY = useRef(0);
+  const autoRotDir = useRef(1);          // +1 or -1 for oscillation direction
   const liftY = useRef(0);
   const transitionTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Mirror of bookState as a ref — useFrame reads this to avoid stale closures
+  // Mirror of bookState as a ref — useFrame reads this to avoid stale closures.
+  // Updated SYNCHRONOUSLY (not via useEffect) so it's current before the next RAF.
   const bookStateRef = useRef<BookState>('idle');
 
-  // Keep ref in sync with state; also notify parent
+  // Notify parent of state changes (only side-effect, ref is already updated)
   useEffect(() => {
-    bookStateRef.current = bookState;
     onStateChange?.(bookState);
   }, [bookState, onStateChange]);
+
+  // Synchronous state setter — updates the ref immediately, then triggers React re-render
+  const updateBookState = (newState: BookState) => {
+    bookStateRef.current = newState;
+    setBookState(newState);
+  };
 
   // ─── Unmount cleanup for transition timeout ────────────────────────────────
 
@@ -75,13 +82,12 @@ export default function MagicBook3D({ cvData, onStateChange }: MagicBook3DProps)
   const handleLeafClick = (leafIndex: number) => {
     const state = bookStateRef.current;
     if (state === 'idle' || state === 'hover') {
-      // Align to face camera before opening — synchronous, invisible to user
       snapToFront();
-      setBookState('opening');
+      updateBookState('opening');
       playPageFlip();
       setCurrentPage(1);
       if (transitionTimeout.current) clearTimeout(transitionTimeout.current);
-      transitionTimeout.current = setTimeout(() => setBookState('reading'), 800);
+      transitionTimeout.current = setTimeout(() => updateBookState('reading'), 800);
     } else if (state === 'reading') {
       const newPage = leafIndex + 1;
       if (newPage !== currentPage) {
@@ -116,9 +122,9 @@ export default function MagicBook3D({ cvData, onStateChange }: MagicBook3DProps)
 
     const closeBook = () => {
       setCurrentPage(0);
-      setBookState('closing');
+      updateBookState('closing');
       if (transitionTimeout.current) clearTimeout(transitionTimeout.current);
-      transitionTimeout.current = setTimeout(() => setBookState('idle'), 800);
+      transitionTimeout.current = setTimeout(() => updateBookState('idle'), 800);
     };
 
     const onKey = (e: KeyboardEvent) => {
@@ -138,15 +144,21 @@ export default function MagicBook3D({ cvData, onStateChange }: MagicBook3DProps)
     const state = bookStateRef.current;
 
     if (state === 'idle' || state === 'hover') {
-      autoRotY.current += 0.003;
+      // Gentle sway ±0.42 rad (±24°) — book never faces away from camera
+      const SWAY = 0.42;
+      autoRotY.current += 0.003 * autoRotDir.current;
+      if (Math.abs(autoRotY.current) >= SWAY) {
+        autoRotDir.current *= -1;
+        autoRotY.current = Math.sign(autoRotY.current) * SWAY;
+      }
       groupRef.current.rotation.y = autoRotY.current;
     } else if (state === 'opening') {
-      // snapToFront() already aligned the book at click time; this applies
-      // any tiny residual delta that may accumulate across async React renders
+      // Lerp residual angle to 0 — snapToFront() handles most of it at click time
       const cur = groupRef.current.rotation.y;
-      const target = Math.round(cur / (Math.PI * 2)) * (Math.PI * 2);
-      if (Math.abs(cur - target) > 0.001) {
-        groupRef.current.rotation.y += (target - cur) * Math.min(1, delta * 10);
+      if (Math.abs(cur) > 0.001) {
+        groupRef.current.rotation.y += (0 - cur) * Math.min(1, delta * 10);
+      } else {
+        groupRef.current.rotation.y = 0;
       }
       autoRotY.current = groupRef.current.rotation.y;
     } else {
@@ -184,10 +196,10 @@ export default function MagicBook3D({ cvData, onStateChange }: MagicBook3DProps)
       <group
         ref={groupRef}
         onPointerEnter={() => {
-          if (bookStateRef.current === 'idle') setBookState('hover');
+          if (bookStateRef.current === 'idle') updateBookState('hover');
         }}
         onPointerLeave={() => {
-          if (bookStateRef.current === 'hover') setBookState('idle');
+          if (bookStateRef.current === 'hover') updateBookState('idle');
         }}
       >
         <BookFlip
