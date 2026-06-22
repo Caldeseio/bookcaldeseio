@@ -83,23 +83,24 @@ function goldBorder(ctx: CanvasRenderingContext2D, inset = 24) {
 }
 
 function drawLogo(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.rotate((38 * Math.PI) / 180);
-  ctx.beginPath();
-  ctx.arc(0, 0, 70, 0, Math.PI * 2);
-  ctx.strokeStyle = C.gold;
-  ctx.lineWidth = 8;
-  ctx.lineCap = 'round';
-  ctx.setLineDash([127, 168]);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.restore();
+  const R = 70;
+  const halfGap = (38 * Math.PI) / 180; // 38° from right axis
 
-  // small green dot at approx top-right of the C arc
+  // C arc — opens to the RIGHT (anticlockwise from bottom-right to top-right)
   ctx.beginPath();
-  ctx.arc(cx + 54, cy - 65, 9, 0, Math.PI * 2);
-  ctx.fillStyle = C.logoGreen;
+  ctx.arc(cx, cy, R, halfGap, -halfGap, true);
+  ctx.strokeStyle = '#EDE9DB';
+  ctx.lineWidth = 20;
+  ctx.lineCap = 'round';
+  ctx.setLineDash([]);
+  ctx.stroke();
+
+  // Green dot at top end of arc (angle = -halfGap)
+  const dotX = cx + R * Math.cos(-halfGap);
+  const dotY = cy + R * Math.sin(-halfGap);
+  ctx.beginPath();
+  ctx.arc(dotX, dotY, 11, 0, Math.PI * 2);
+  ctx.fillStyle = '#4A8C5C';
   ctx.fill();
 }
 
@@ -553,6 +554,18 @@ function renderContact(ctx: CanvasRenderingContext2D, data: PageTextureData) {
     ctx.fillText(line, W / 2, y);
     y += 26;
   }
+
+  // Epilogue quote
+  const quoteY = y + 16;
+  goldDivider(ctx, quoteY - 6, 80);
+  ctx.font = 'italic 13px EB Garamond, Georgia, serif';
+  ctx.fillStyle = C.chapterLabel;
+  ctx.textAlign = 'center';
+  ctx.fillText('Ingeniería de datos, IA y la nube', W / 2, quoteY + 16);
+  ctx.fillText('son el próximo capítulo.', W / 2, quoteY + 34);
+  ctx.font = 'italic 11px EB Garamond, Georgia, serif';
+  ctx.fillStyle = C.pageNum;
+  ctx.fillText('La historia continúa.', W / 2, quoteY + 52);
 
   // bottom label
   ctx.font = '400 10px Cinzel';
