@@ -56,13 +56,15 @@ export default function ForestScene() {
   return (
     <>
       {/* Fog */}
-      <fogExp2 attach="fog" args={['#0a1a0a', 0.04]} />
+      <fogExp2 attach="fog" args={['#0d2a12', 0.02]} />
 
       {/* Lighting */}
-      <ambientLight color="#1a3a1a" intensity={0.4} />
+      <ambientLight color="#3a7a3a" intensity={1.0} />
+      <hemisphereLight args={['#204030', '#0a1a0a', 1.2]} />
+      <directionalLight color="#a0b8c0" intensity={0.6} position={[-8, 12, -5]} />
       <spotLight
         color="#ffcc88"
-        intensity={80}
+        intensity={140}
         position={[0, 8, 2]}
         angle={0.4}
         penumbra={0.6}
@@ -92,7 +94,7 @@ export default function ForestScene() {
       {/* Tree canopies */}
       <instancedMesh ref={canopyRef} args={[undefined, undefined, TREE_COUNT]}>
         <coneGeometry args={[0.7, 3.5, 6]} />
-        <meshStandardMaterial color="#0d2a0d" />
+        <meshStandardMaterial color="#1a4a1a" />
       </instancedMesh>
 
       {/* Stars */}
