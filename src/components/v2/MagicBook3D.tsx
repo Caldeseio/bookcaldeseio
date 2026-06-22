@@ -107,7 +107,7 @@ export default function MagicBook3D({ cvData, onStateChange }: MagicBook3DProps)
 
     // Lift
     const targetLift = st === 'reading' || st === 'opening' ? 0.3 : 0;
-    liftY.current += (targetLift - liftY.current) * Math.min(1, delta * 2);
+    liftY.current += (targetLift - liftY.current) * Math.min(1, delta * 5);
     groupRef.current.position.y = liftY.current;
 
     // Point light

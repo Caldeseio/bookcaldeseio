@@ -40,19 +40,18 @@ export default function BookV2Experience({ cvData }: BookV2ExperienceProps) {
   return (
     <div style={{ position: 'relative', width: '100%', height: '100vh' }}>
       <Canvas
-        camera={{ position: [0, 2, 5], fov: 45 }}
+        camera={{ position: [0, 2, 3.5], fov: 45 }}
         gl={{ antialias: true, alpha: false }}
         style={{ width: '100%', height: '100vh', background: '#0a1a0a' }}
-        shadows
       >
-        <OrbitControls enableRotate={false} enablePan={false} zoomSpeed={0.6} minDistance={2.5} maxDistance={10} />
+        <OrbitControls enableRotate={false} enablePan={false} zoomSpeed={0.6} minDistance={1.5} maxDistance={8} />
         <ForestScene />
         <MagicBook3D cvData={cvData} onStateChange={setBookState} />
         <EffectComposer>
           <Bloom
-            luminanceThreshold={0.4}
-            luminanceSmoothing={0.9}
-            intensity={1.5}
+            luminanceThreshold={0.55}
+            luminanceSmoothing={0.8}
+            intensity={0.7}
           />
         </EffectComposer>
       </Canvas>

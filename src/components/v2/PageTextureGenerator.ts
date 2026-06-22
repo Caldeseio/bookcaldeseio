@@ -42,15 +42,16 @@ const C = {
   logoGreen: '#7FB07F',
 } as const;
 
-const W = 512;
+const W = 512;   // logical coordinate space (unchanged — all coords stay the same)
 const H = 704;
+const PX = 2;    // physical pixel multiplier — canvas renders at 2× for crisp text
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function makeCanvas(): HTMLCanvasElement {
   const el = document.createElement('canvas');
-  el.width = W;
-  el.height = H;
+  el.width = W * PX;
+  el.height = H * PX;
   return el;
 }
 
@@ -114,7 +115,7 @@ function pageNumber(ctx: CanvasRenderingContext2D, label: string) {
 }
 
 function chapterLabel(ctx: CanvasRenderingContext2D, label: string, y = 52) {
-  ctx.font = '400 11px Cinzel';
+  ctx.font = '400 13px Cinzel';
   ctx.fillStyle = C.chapterLabel;
   ctx.textAlign = 'center';
   ctx.letterSpacing = '0.2em';
@@ -123,7 +124,7 @@ function chapterLabel(ctx: CanvasRenderingContext2D, label: string, y = 52) {
 }
 
 function sectionTitle(ctx: CanvasRenderingContext2D, title: string, y: number) {
-  ctx.font = '700 24px Cinzel';
+  ctx.font = '700 28px Cinzel';
   ctx.fillStyle = C.ink;
   ctx.textAlign = 'center';
   ctx.fillText(title, W / 2, y);
@@ -305,7 +306,7 @@ function renderAbout(ctx: CanvasRenderingContext2D, data: PageTextureData) {
 
   // Summary text without the leading 'S'
   const rest = data.summary.slice(1);
-  ctx.font = '400 15px EB Garamond, Georgia, serif';
+  ctx.font = '400 17px EB Garamond, Georgia, serif';
   ctx.fillStyle = C.ink;
 
   // First lines beside drop cap
@@ -313,7 +314,7 @@ function renderAbout(ctx: CanvasRenderingContext2D, data: PageTextureData) {
   const dropColW = bodyW - (dropSize - 4);
   let y = 130;
   const lines1 = wrapText(ctx, rest, dropColW);
-  const lh = 22;
+  const lh = 24;
   let i = 0;
   while (i < lines1.length && y < 182) {
     ctx.fillText(lines1[i], dropColX, y);
@@ -351,7 +352,7 @@ function renderTools(ctx: CanvasRenderingContext2D, data: PageTextureData) {
   chapterLabel(ctx, 'CAPÍTULO II', 52);
   sectionTitle(ctx, 'Mis herramientas', 88);
 
-  ctx.font = 'italic 14px EB Garamond, Georgia, serif';
+  ctx.font = 'italic 16px EB Garamond, Georgia, serif';
   ctx.fillStyle = C.ink;
   ctx.fillText('lo que llevo en la mochila', W / 2, 112);
   goldDivider(ctx, 126, 60);
@@ -379,10 +380,10 @@ function renderTools(ctx: CanvasRenderingContext2D, data: PageTextureData) {
     ctx.fill();
     ctx.stroke();
 
-    ctx.font = '400 13px Cinzel';
+    ctx.font = '400 14px Cinzel';
     ctx.fillStyle = C.ink;
     ctx.textAlign = 'left';
-    ctx.fillText(skill.name, x + 10, y + 22);
+    ctx.fillText(skill.name, x + 10, y + 23);
   }
 
   // branch legend
@@ -408,31 +409,31 @@ function renderExperience(ctx: CanvasRenderingContext2D, data: PageTextureData) 
     const exp = data.experience[i];
     if (y > 630) break;
 
-    ctx.font = '700 14px Cinzel';
+    ctx.font = '700 15px Cinzel';
     ctx.fillStyle = C.ink;
     ctx.textAlign = 'left';
     ctx.fillText(exp.company, 52, y);
 
-    ctx.font = 'italic 13px EB Garamond, Georgia, serif';
+    ctx.font = 'italic 15px EB Garamond, Georgia, serif';
     ctx.fillStyle = C.ink;
-    y += 18;
+    y += 20;
     ctx.fillText(exp.role, 52, y);
 
-    ctx.font = '400 11px Cinzel';
+    ctx.font = '400 12px Cinzel';
     ctx.fillStyle = C.pageNum;
     ctx.textAlign = 'right';
-    ctx.fillText(exp.period, W - 52, y - 18);
+    ctx.fillText(exp.period, W - 52, y - 20);
     ctx.textAlign = 'left';
 
-    ctx.font = '400 12px EB Garamond, Georgia, serif';
+    ctx.font = '400 14px EB Garamond, Georgia, serif';
     ctx.fillStyle = C.ink;
-    y += 16;
+    y += 18;
     const highlights = exp.highlights.slice(0, 2);
     for (const h of highlights) {
       const lines = wrapText(ctx, `• ${h}`, W - 104);
       for (const l of lines) {
         ctx.fillText(l, 52, y);
-        y += 16;
+        y += 18;
       }
     }
 
@@ -456,14 +457,14 @@ function renderEducation(ctx: CanvasRenderingContext2D, data: PageTextureData) {
   let y = 130;
   ctx.textAlign = 'left';
   for (const ed of data.education) {
-    ctx.font = '700 13px Cinzel';
+    ctx.font = '700 15px Cinzel';
     ctx.fillStyle = C.ink;
     ctx.fillText(ed.degree, 52, y);
-    y += 17;
-    ctx.font = 'italic 13px EB Garamond, Georgia, serif';
+    y += 20;
+    ctx.font = 'italic 15px EB Garamond, Georgia, serif';
     ctx.fillStyle = C.pageNum;
     ctx.fillText(ed.institution, 52, y);
-    y += 22;
+    y += 24;
   }
 
   dottedSeparator(ctx, y + 4);
@@ -475,14 +476,14 @@ function renderEducation(ctx: CanvasRenderingContext2D, data: PageTextureData) {
   ctx.fillText('CERTIFICACIONES', W / 2, y);
   y += 20;
 
-  ctx.font = '400 12px EB Garamond, Georgia, serif';
+  ctx.font = '400 14px EB Garamond, Georgia, serif';
   ctx.fillStyle = C.ink;
   ctx.textAlign = 'left';
   for (const cert of data.certifications) {
     const lines = wrapText(ctx, `· ${cert}`, W - 104);
     for (const l of lines) {
       ctx.fillText(l, 52, y);
-      y += 16;
+      y += 18;
     }
     y += 2;
   }
@@ -496,12 +497,12 @@ function renderEducation(ctx: CanvasRenderingContext2D, data: PageTextureData) {
   ctx.fillText('IDIOMAS', W / 2, y);
   y += 20;
 
-  ctx.font = '400 13px EB Garamond, Georgia, serif';
+  ctx.font = '400 15px EB Garamond, Georgia, serif';
   ctx.fillStyle = C.ink;
   ctx.textAlign = 'left';
   for (const lang of data.languages) {
     ctx.fillText(`${lang.name} — ${lang.level}`, 52, y);
-    y += 18;
+    y += 20;
   }
 
   pageNumber(ctx, '— 4 —');
@@ -549,12 +550,12 @@ function renderContact(ctx: CanvasRenderingContext2D, data: PageTextureData) {
   ];
 
   let y = 214;
-  ctx.font = '400 15px EB Garamond, Georgia, serif';
+  ctx.font = '400 17px EB Garamond, Georgia, serif';
   ctx.fillStyle = C.ink;
   ctx.textAlign = 'center';
   for (const line of contactLines) {
     ctx.fillText(line, W / 2, y);
-    y += 26;
+    y += 28;
   }
 
   // Epilogue quote
@@ -585,6 +586,8 @@ export function generatePageTexture(
 ): HTMLCanvasElement {
   const canvas = makeCanvas();
   const ctx = canvas.getContext('2d')!;
+  // Scale all drawing into the physical pixel space so logical coords still work
+  ctx.scale(PX, PX);
 
   switch (face) {
     case 'cover':      renderCover(ctx, data);      break;
