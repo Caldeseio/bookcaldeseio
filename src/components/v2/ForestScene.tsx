@@ -68,7 +68,6 @@ export default function ForestScene() {
         position={[0, 8, 2]}
         angle={0.4}
         penumbra={0.6}
-        castShadow
         target-position={[0, 0, 0]}
       />
       <pointLight
