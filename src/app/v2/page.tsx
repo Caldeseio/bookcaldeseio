@@ -4,16 +4,16 @@ import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import {
   contact, summary, experience, education, certifications, languages,
-} from '../data/v2/cvData';
-import { SKILLS } from '../data/skills';
+} from '../../data/v2/cvData';
+import { SKILLS } from '../../data/skills';
 
 // Dynamic imports — prevent SSR for Three.js
-const BookV2Experience = dynamic(() => import('../components/v2/BookV2Experience'), {
+const BookV2Experience = dynamic(() => import('../../components/v2/BookV2Experience'), {
   ssr: false,
   loading: () => <LoadingScreen />,
 });
 
-const MobileBook = dynamic(() => import('../components/v2/MobileBook'), {
+const MobileBook = dynamic(() => import('../../components/v2/MobileBook'), {
   ssr: false,
 });
 
@@ -37,9 +37,7 @@ function LoadingScreen() {
 }
 
 export default function V2Page() {
-  const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== 'undefined' ? window.innerWidth < 768 : false
-  );
+  const [isMobile, setIsMobile] = useState(false);
   const [fontsLoaded, setFontsLoaded] = useState(false);
 
   useEffect(() => {
@@ -54,8 +52,8 @@ export default function V2Page() {
     link.href = 'https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap';
     link.onload = () => setFontsLoaded(true);
     document.head.appendChild(link);
-    // Fallback: consider loaded after 1.2s even if font API is slow
-    const timeout = setTimeout(() => setFontsLoaded(true), 1200);
+    // Fallback: consider loaded after 2s even if font API is slow
+    const timeout = setTimeout(() => setFontsLoaded(true), 2000);
 
     return () => {
       window.removeEventListener('resize', check);
