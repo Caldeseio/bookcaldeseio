@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
+import { OrbitControls } from '@react-three/drei';
 import ForestScene from './ForestScene';
 import MagicBook3D, { BookState } from './MagicBook3D';
 import { PageTextureData } from './PageTextureGenerator';
@@ -44,6 +45,7 @@ export default function BookV2Experience({ cvData }: BookV2ExperienceProps) {
         style={{ width: '100%', height: '100vh', background: '#0a1a0a' }}
         shadows
       >
+        <OrbitControls enableRotate={false} enablePan={false} zoomSpeed={0.6} minDistance={2.5} maxDistance={10} />
         <ForestScene />
         <MagicBook3D cvData={cvData} onStateChange={setBookState} />
         <EffectComposer>
@@ -105,7 +107,12 @@ export default function BookV2Experience({ cvData }: BookV2ExperienceProps) {
             zIndex: 10,
           }}
         >
-          CLICK PARA ABRIR
+          <>
+            <div>CLICK PARA ABRIR</div>
+            <div style={{ fontSize: '11px', opacity: 0.7, marginTop: '4px', letterSpacing: '0.15em' }}>
+              SCROLL · acercar/alejar
+            </div>
+          </>
         </div>
       )}
     </div>
