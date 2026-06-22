@@ -13,11 +13,11 @@ interface FirefliesProps {
 }
 
 export default function Fireflies({
-  count = 600,
+  count = 180,
   spread = 20,
   height = 4,
   color = '#88ffaa',
-  size = 0.06,
+  size = 0.07,
 }: FirefliesProps) {
   const basePositions = useMemo(() => {
     const positions = new Float32Array(count * 3);
@@ -31,23 +31,30 @@ export default function Fireflies({
     return positions;
   }, [count, spread, height]);
 
+  // Precompute per-firefly phase offsets so the loop only does cheap math
+  const phases = useMemo(() => new Float32Array(count).map((_, i) => i * 0.15), [count]);
+
   const posRef = useRef<Float32Array>(basePositions.slice());
   const geomRef = useRef<THREE.BufferGeometry>(null);
   const matRef = useRef<THREE.PointsMaterial>(null);
+  // Only update GPU buffer every other frame
+  const frameSkip = useRef(0);
 
   useFrame(({ clock }) => {
+    frameSkip.current ^= 1;
     const t = clock.getElapsedTime();
     const pos = posRef.current;
     for (let i = 0; i < count; i++) {
-      pos[i * 3]     = basePositions[i * 3]     + Math.sin(t * 0.2 + i) * 0.3;
-      pos[i * 3 + 1] = basePositions[i * 3 + 1] + Math.sin(t + i * 0.15) * 0.3;
-      pos[i * 3 + 2] = basePositions[i * 3 + 2] + Math.cos(t * 0.2 + i) * 0.3;
+      const ph = phases[i];
+      pos[i * 3]     = basePositions[i * 3]     + Math.sin(t * 0.18 + ph) * 0.28;
+      pos[i * 3 + 1] = basePositions[i * 3 + 1] + Math.sin(t + ph)        * 0.28;
+      pos[i * 3 + 2] = basePositions[i * 3 + 2] + Math.cos(t * 0.18 + ph) * 0.28;
     }
-    if (geomRef.current) {
+    if (geomRef.current && frameSkip.current === 0) {
       geomRef.current.attributes.position.needsUpdate = true;
     }
-    if (matRef.current) {
-      matRef.current.size = size * (0.7 + 0.3 * Math.sin(t * 2));
+    if (matRef.current && frameSkip.current === 0) {
+      matRef.current.size = size * (0.75 + 0.25 * Math.sin(t * 1.8));
     }
   });
 

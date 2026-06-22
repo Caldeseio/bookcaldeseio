@@ -194,18 +194,22 @@ function Leaf({
   });
 
   return (
-    <group
-      ref={groupRef}
-      onClick={(e) => {
-        e.stopPropagation();
-        onLeafClick(leafIndex);
-      }}
-    >
+    <group ref={groupRef}>
+      {/* Skinned mesh — visual only, raycasting disabled (bone-deformed mesh is expensive to raycast) */}
       <primitive
         object={manualSkinnedMesh}
         ref={skinnedMeshRef}
         position-z={-leafIndex * PAGE_DEPTH}
+        raycast={() => null}
       />
+      {/* Cheap invisible box as hit area — handles all pointer events */}
+      <mesh
+        position-x={PAGE_WIDTH / 2}
+        onClick={(e) => { e.stopPropagation(); onLeafClick(leafIndex); }}
+      >
+        <boxGeometry args={[PAGE_WIDTH, PAGE_HEIGHT, 0.04]} />
+        <meshBasicMaterial visible={false} />
+      </mesh>
     </group>
   );
 }
