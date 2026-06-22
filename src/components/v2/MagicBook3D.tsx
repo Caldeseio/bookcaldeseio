@@ -121,8 +121,16 @@ export default function MagicBook3D({ cvData, onStateChange }: MagicBook3DProps)
       autoRotY.current += 0.003;
       groupRef.current.rotation.y = autoRotY.current;
     } else if (bookState === 'opening') {
-      // Lerp back to face the camera (Y rotation → 0)
-      groupRef.current.rotation.y += (0 - groupRef.current.rotation.y) * Math.min(1, delta * 4);
+      // Lerp to the NEAREST multiple of 2π (face camera without long backward spin)
+      const cur = groupRef.current.rotation.y;
+      const target = Math.round(cur / (Math.PI * 2)) * (Math.PI * 2);
+      groupRef.current.rotation.y += (target - cur) * Math.min(1, delta * 6);
+      // Keep autoRotY in sync so re-entering idle after this is seamless
+      autoRotY.current = groupRef.current.rotation.y;
+    } else {
+      // reading / closing: keep autoRotY synced to current rotation so
+      // returning to idle never produces a jump
+      autoRotY.current = groupRef.current.rotation.y;
     }
 
     // Lift animation

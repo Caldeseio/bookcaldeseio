@@ -126,11 +126,11 @@ export default function MobileBook({ cvData }: MobileBookProps) {
             <div style={{
               width: '80px', height: '80px', borderRadius: '50%',
               border: '10px solid #EDE9DB', borderRightColor: 'transparent',
-              margin: '16px auto', transform: 'rotate(-38deg)', position: 'relative',
+              margin: '16px auto', position: 'relative',
             }}>
               <div style={{
-                position: 'absolute', top: -5, right: -5, width: 18, height: 18,
-                borderRadius: '50%', background: '#4A8C5C', transform: 'rotate(38deg)',
+                position: 'absolute', top: -6, right: -6, width: 18, height: 18,
+                borderRadius: '50%', background: '#4A8C5C',
               }} />
             </div>
             <div
@@ -508,11 +508,11 @@ export default function MobileBook({ cvData }: MobileBookProps) {
             <div style={{
               width: '60px', height: '60px', borderRadius: '50%',
               border: '8px solid #EDE9DB', borderRightColor: 'transparent',
-              margin: '0 auto', transform: 'rotate(-38deg)', position: 'relative',
+              margin: '0 auto', position: 'relative',
             }}>
               <div style={{
-                position: 'absolute', top: -4, right: -4, width: 14, height: 14,
-                borderRadius: '50%', background: '#4A8C5C', transform: 'rotate(38deg)',
+                position: 'absolute', top: -5, right: -5, width: 14, height: 14,
+                borderRadius: '50%', background: '#4A8C5C',
               }} />
             </div>
             <div
