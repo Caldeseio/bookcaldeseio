@@ -40,7 +40,7 @@ export default function BookV2Experience({ cvData }: BookV2ExperienceProps) {
   return (
     <div style={{ position: 'relative', width: '100%', height: '100vh' }}>
       <Canvas
-        camera={{ position: [0, 2, 3.5], fov: 45 }}
+        camera={{ position: [0, 2, 3], fov: 45 }}
         gl={{ antialias: true, alpha: false }}
         style={{ width: '100%', height: '100vh', background: '#0a1a0a' }}
       >
