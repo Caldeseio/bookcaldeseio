@@ -84,22 +84,24 @@ function goldBorder(ctx: CanvasRenderingContext2D, inset = 24) {
 
 function drawLogo(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
   const R = 70;
-  const halfGap = (38 * Math.PI) / 180; // 38° from right axis
+  // halfGap = 45°: arc spans 270° (the C shape), gap is 90° centered on the right
+  const halfGap = (45 * Math.PI) / 180;
 
-  // C arc — opens to the RIGHT (anticlockwise from bottom-right to top-right)
+  // C arc — clockwise (false) from lower-right (+45°) around the long way to upper-right (-45°)
+  // anticlockwise=true would draw only the 90° gap, NOT the C — must use false here
   ctx.beginPath();
-  ctx.arc(cx, cy, R, halfGap, -halfGap, true);
+  ctx.arc(cx, cy, R, halfGap, -halfGap, false);
   ctx.strokeStyle = '#EDE9DB';
   ctx.lineWidth = 20;
   ctx.lineCap = 'round';
   ctx.setLineDash([]);
   ctx.stroke();
 
-  // Green dot at top end of arc (angle = -halfGap)
+  // Green dot at upper-right end of arc (angle = -halfGap = -45°)
   const dotX = cx + R * Math.cos(-halfGap);
   const dotY = cy + R * Math.sin(-halfGap);
   ctx.beginPath();
-  ctx.arc(dotX, dotY, 11, 0, Math.PI * 2);
+  ctx.arc(dotX, dotY, 12, 0, Math.PI * 2);
   ctx.fillStyle = '#4A8C5C';
   ctx.fill();
 }
