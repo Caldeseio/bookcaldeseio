@@ -31,13 +31,25 @@ interface MobileBookProps {
 }
 
 export default function MobileBook({ cvData }: MobileBookProps) {
-  const [currentPage, setCurrentPage] = useState(0);
+  const [displayPage, setDisplayPage] = useState(0);
+  const [animating, setAnimating] = useState(false);
+  const [direction, setDirection] = useState<'left' | 'right'>('right');
   const TOTAL_PAGES = 7;
 
   const touchStart = useRef(0);
 
-  const nextPage = () => setCurrentPage(p => Math.min(TOTAL_PAGES - 1, p + 1));
-  const prevPage = () => setCurrentPage(p => Math.max(0, p - 1));
+  const changePage = (newPage: number) => {
+    if (newPage === displayPage || newPage < 0 || newPage >= TOTAL_PAGES) return;
+    setDirection(newPage > displayPage ? 'left' : 'right');
+    setAnimating(true);
+    setTimeout(() => {
+      setDisplayPage(newPage);
+      setAnimating(false);
+    }, 280);
+  };
+
+  const nextPage = () => changePage(displayPage + 1);
+  const prevPage = () => changePage(displayPage - 1);
 
   const onTouchStart = (e: React.TouchEvent) => {
     touchStart.current = e.touches[0].clientX;
@@ -59,6 +71,25 @@ export default function MobileBook({ cvData }: MobileBookProps) {
     fontFamily: 'inherit',
     fontSize: '14px',
     letterSpacing: '0.05em',
+  };
+
+  const bookCardStyle: React.CSSProperties = {
+    width: '100%',
+    maxWidth: '380px',
+    minHeight: '520px',
+    borderRadius: '8px',
+    boxShadow:
+      '0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(0,0,0,0.4)',
+    overflow: 'hidden',
+    position: 'relative',
+  };
+
+  const pageAnimStyle: React.CSSProperties = {
+    transition: 'opacity 0.28s ease, transform 0.28s ease',
+    opacity: animating ? 0 : 1,
+    transform: animating
+      ? `translateX(${direction === 'left' ? '-16px' : '16px'})`
+      : 'translateX(0)',
   };
 
   const renderPage = (page: number): React.ReactNode => {
@@ -92,17 +123,16 @@ export default function MobileBook({ cvData }: MobileBookProps) {
             >
               MMXXVI
             </div>
-            <div
-              style={{
-                width: '80px',
-                height: '80px',
-                borderRadius: '50%',
-                border: '4px solid #C9A24B',
-                borderRightColor: 'transparent',
-                margin: '16px auto',
-                transform: 'rotate(-45deg)',
-              }}
-            />
+            <div style={{
+              width: '80px', height: '80px', borderRadius: '50%',
+              border: '10px solid #EDE9DB', borderRightColor: 'transparent',
+              margin: '16px auto', transform: 'rotate(-38deg)', position: 'relative',
+            }}>
+              <div style={{
+                position: 'absolute', top: -5, right: -5, width: 18, height: 18,
+                borderRadius: '50%', background: '#4A8C5C', transform: 'rotate(38deg)',
+              }} />
+            </div>
             <div
               style={{
                 color: '#C9A24B',
@@ -475,17 +505,16 @@ export default function MobileBook({ cvData }: MobileBookProps) {
               textAlign: 'center',
             }}
           >
-            <div
-              style={{
-                width: '60px',
-                height: '60px',
-                borderRadius: '50%',
-                border: '3px solid #C9A24B',
-                borderRightColor: 'transparent',
-                margin: '0 auto',
-                transform: 'rotate(-45deg)',
-              }}
-            />
+            <div style={{
+              width: '60px', height: '60px', borderRadius: '50%',
+              border: '8px solid #EDE9DB', borderRightColor: 'transparent',
+              margin: '0 auto', transform: 'rotate(-38deg)', position: 'relative',
+            }}>
+              <div style={{
+                position: 'absolute', top: -4, right: -4, width: 14, height: 14,
+                borderRadius: '50%', background: '#4A8C5C', transform: 'rotate(38deg)',
+              }} />
+            </div>
             <div
               style={{
                 color: 'rgba(201,162,75,0.5)',
@@ -520,20 +549,25 @@ export default function MobileBook({ cvData }: MobileBookProps) {
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
+      {/* PC notice banner */}
+      <div style={{
+        position: 'sticky', top: 0, zIndex: 20,
+        background: 'rgba(36,48,36,0.97)',
+        borderBottom: '1px solid #B68A2E',
+        padding: '10px 16px',
+        textAlign: 'center',
+        color: '#C9A24B',
+        fontSize: '11px',
+        letterSpacing: '0.12em',
+        fontFamily: "'Cinzel', serif",
+        width: '100%',
+      }}>
+        Para la experiencia 3D completa, usa un computador
+      </div>
+
       {/* Book card */}
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '380px',
-          minHeight: '520px',
-          borderRadius: '8px',
-          boxShadow:
-            '0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(0,0,0,0.4)',
-          overflow: 'hidden',
-          position: 'relative',
-        }}
-      >
-        {renderPage(currentPage)}
+      <div style={{ ...bookCardStyle, ...pageAnimStyle }}>
+        {renderPage(displayPage)}
       </div>
 
       {/* Navigation dots */}
@@ -541,13 +575,13 @@ export default function MobileBook({ cvData }: MobileBookProps) {
         {Array.from({ length: TOTAL_PAGES }, (_, i) => (
           <button
             key={i}
-            onClick={() => setCurrentPage(i)}
+            onClick={() => changePage(i)}
             style={{
-              width: i === currentPage ? '24px' : '8px',
+              width: i === displayPage ? '24px' : '8px',
               height: '8px',
               borderRadius: '4px',
               background:
-                i === currentPage
+                i === displayPage
                   ? '#C9A24B'
                   : 'rgba(201,162,75,0.3)',
               border: 'none',
@@ -563,14 +597,14 @@ export default function MobileBook({ cvData }: MobileBookProps) {
       <div style={{ display: 'flex', gap: '16px', marginTop: '16px' }}>
         <button
           onClick={prevPage}
-          disabled={currentPage === 0}
+          disabled={displayPage === 0 || animating}
           style={navBtnStyle}
         >
           ← Anterior
         </button>
         <button
           onClick={nextPage}
-          disabled={currentPage === TOTAL_PAGES - 1}
+          disabled={displayPage === TOTAL_PAGES - 1 || animating}
           style={navBtnStyle}
         >
           Siguiente →
