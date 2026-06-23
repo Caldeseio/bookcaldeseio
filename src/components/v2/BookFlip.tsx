@@ -94,7 +94,6 @@ function Leaf({
   const skinnedMeshRef = useRef<THREE.SkinnedMesh>(null);
   const turnedAt = useRef(0);
   const lastOpened = useRef(opened);
-  const dragStartX = useRef<number | null>(null);
 
   const manualSkinnedMesh = useMemo(() => {
     const bones: Bone[] = [];
@@ -205,20 +204,30 @@ function Leaf({
         position-z={-leafIndex * PAGE_DEPTH}
         raycast={() => null}
       />
-      {/* Cheap invisible hit area — distinguishes click from horizontal drag */}
+      {/* Cheap invisible hit area — onPointerDown starts gesture; window pointerup ends it
+          (window-level listener fires even if mouse leaves the mesh during drag) */}
       <mesh
         position-x={PAGE_WIDTH / 2}
-        onPointerDown={(e) => { e.stopPropagation(); dragStartX.current = e.clientX; }}
-        onPointerUp={(e) => {
+        onPointerDown={(e) => {
           e.stopPropagation();
-          if (dragStartX.current === null) return;
-          const delta = e.clientX - dragStartX.current;
-          dragStartX.current = null;
-          if (Math.abs(delta) < 12) {
-            onLeafClick(leafIndex);   // small movement = click
-          } else {
-            onDrag?.(delta);           // horizontal drag = page turn
-          }
+          const startX = e.clientX;
+          let dragged = false;
+
+          const onMove = (ev: PointerEvent) => {
+            if (Math.abs(ev.clientX - startX) > 6) dragged = true;
+          };
+          const onUp = (ev: PointerEvent) => {
+            window.removeEventListener('pointermove', onMove);
+            window.removeEventListener('pointerup', onUp);
+            const delta = ev.clientX - startX;
+            if (!dragged || Math.abs(delta) < 12) {
+              onLeafClick(leafIndex);   // click
+            } else {
+              onDrag?.(delta);           // horizontal drag → page turn
+            }
+          };
+          window.addEventListener('pointermove', onMove);
+          window.addEventListener('pointerup', onUp);
         }}
       >
         <boxGeometry args={[PAGE_WIDTH, PAGE_HEIGHT, 0.04]} />
