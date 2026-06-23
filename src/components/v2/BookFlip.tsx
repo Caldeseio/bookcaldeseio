@@ -77,6 +77,7 @@ interface LeafProps {
   frontTexture: CanvasTexture;
   backTexture: CanvasTexture;
   onLeafClick: (leafIndex: number) => void;
+  onDrag?: (deltaX: number) => void;
 }
 
 function Leaf({
@@ -87,11 +88,13 @@ function Leaf({
   frontTexture,
   backTexture,
   onLeafClick,
+  onDrag,
 }: LeafProps) {
   const groupRef = useRef<THREE.Group>(null);
   const skinnedMeshRef = useRef<THREE.SkinnedMesh>(null);
   const turnedAt = useRef(0);
   const lastOpened = useRef(opened);
+  const dragStartX = useRef<number | null>(null);
 
   const manualSkinnedMesh = useMemo(() => {
     const bones: Bone[] = [];
@@ -195,17 +198,28 @@ function Leaf({
 
   return (
     <group ref={groupRef}>
-      {/* Skinned mesh — visual only, raycasting disabled (bone-deformed mesh is expensive to raycast) */}
+      {/* Skinned mesh — visual only, raycasting disabled (expensive against bones) */}
       <primitive
         object={manualSkinnedMesh}
         ref={skinnedMeshRef}
         position-z={-leafIndex * PAGE_DEPTH}
         raycast={() => null}
       />
-      {/* Cheap invisible box as hit area — handles all pointer events */}
+      {/* Cheap invisible hit area — distinguishes click from horizontal drag */}
       <mesh
         position-x={PAGE_WIDTH / 2}
-        onClick={(e) => { e.stopPropagation(); onLeafClick(leafIndex); }}
+        onPointerDown={(e) => { e.stopPropagation(); dragStartX.current = e.clientX; }}
+        onPointerUp={(e) => {
+          e.stopPropagation();
+          if (dragStartX.current === null) return;
+          const delta = e.clientX - dragStartX.current;
+          dragStartX.current = null;
+          if (Math.abs(delta) < 12) {
+            onLeafClick(leafIndex);   // small movement = click
+          } else {
+            onDrag?.(delta);           // horizontal drag = page turn
+          }
+        }}
       >
         <boxGeometry args={[PAGE_WIDTH, PAGE_HEIGHT, 0.04]} />
         <meshBasicMaterial visible={false} />
@@ -220,6 +234,7 @@ interface BookFlipProps {
   currentPage: number;
   isOpen: boolean;
   onLeafClick: (leafIndex: number) => void;
+  onPageDrag?: (deltaX: number) => void;
   cvData: PageTextureData;
 }
 
@@ -227,6 +242,7 @@ export default function BookFlip({
   currentPage,
   isOpen,
   onLeafClick,
+  onPageDrag,
   cvData,
 }: BookFlipProps) {
   const textures = useMemo(() => {
@@ -257,6 +273,7 @@ export default function BookFlip({
           frontTexture={textures[i * 2]}
           backTexture={textures[i * 2 + 1]}
           onLeafClick={onLeafClick}
+          onDrag={onPageDrag}
         />
       ))}
     </group>

@@ -28,11 +28,11 @@ export default function MagicBook3D({ cvData, onStateChange }: MagicBook3DProps)
 
   const groupRef = useRef<THREE.Group>(null);
   const pointLightRef = useRef<THREE.PointLight>(null);
-  const swayY = useRef(0);       // oscillates ±SWAY when idle
-  const swayDir = useRef(1);     // +1 / -1
+  const swayY = useRef(0);
+  const swayDir = useRef(1);
   const liftY = useRef(0);
+  const tiltX = useRef(0);   // X-axis tilt toward camera when reading
   const transitionTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Synchronous mirror of bookState — useFrame reads this to avoid stale closures
   const bookStateRef = useRef<BookState>('idle');
 
   useEffect(() => { onStateChange?.(bookState); }, [bookState, onStateChange]);
@@ -62,6 +62,14 @@ export default function MagicBook3D({ cvData, onStateChange }: MagicBook3DProps)
     }
   };
 
+  // ─── Page drag ───────────────────────────────────────────────────────────
+
+  const handlePageDrag = (deltaX: number) => {
+    if (bookStateRef.current !== 'reading') return;
+    const key = deltaX < 0 ? 'ArrowRight' : 'ArrowLeft';
+    window.dispatchEvent(new KeyboardEvent('keydown', { key }));
+  };
+
   // ─── Keyboard ─────────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -88,9 +96,7 @@ export default function MagicBook3D({ cvData, onStateChange }: MagicBook3DProps)
     if (!groupRef.current) return;
     const st = bookStateRef.current;
 
-    // Outer group sways ±24° around Y=0 when idle; lerps back to 0 when active.
-    // The INNER group (rotation-y = -π/2) fixes the geometry so that Y=0 here
-    // means the book faces the camera correctly.
+    // Y sway when idle, return to 0 when active
     if (st === 'idle' || st === 'hover') {
       const SWAY = 0.42;
       swayY.current += 0.003 * swayDir.current;
@@ -100,10 +106,14 @@ export default function MagicBook3D({ cvData, onStateChange }: MagicBook3DProps)
       }
       groupRef.current.rotation.y = swayY.current;
     } else {
-      // Smoothly return to face-front (Y = 0)
       groupRef.current.rotation.y += (0 - groupRef.current.rotation.y) * Math.min(1, delta * 5);
       swayY.current = groupRef.current.rotation.y;
     }
+
+    // X tilt toward camera when reading (~18°), flat otherwise
+    const targetTiltX = (st === 'reading' || st === 'opening') ? -0.32 : 0;
+    tiltX.current += (targetTiltX - tiltX.current) * Math.min(1, delta * 4);
+    groupRef.current.rotation.x = tiltX.current;
 
     // Lift
     const targetLift = st === 'reading' || st === 'opening' ? 0.3 : 0;
@@ -123,24 +133,18 @@ export default function MagicBook3D({ cvData, onStateChange }: MagicBook3DProps)
     <>
       <pointLight ref={pointLightRef} color="#ffcc44" intensity={3} position={[0, 2, 2]} distance={5} decay={2} />
 
-      {/* Outer group: handles lift + gentle Y sway */}
       <group
         ref={groupRef}
         onPointerEnter={() => { if (bookStateRef.current === 'idle') updateBookState('hover'); }}
         onPointerLeave={() => { if (bookStateRef.current === 'hover') updateBookState('idle'); }}
       >
-        {/*
-          Inner group: corrects the book geometry orientation.
-          BookFlip pages open along the X axis and have their face pointing +Z when
-          fully closed (bone rotation = π/2). Without this correction, the camera
-          at [0,2,5] sees the pages edge-on. Rotating -π/2 around Y turns the
-          +X-facing closed pages to face +Z (toward the camera).
-        */}
+        {/* Inner group corrects geometry: pages face camera at outer rotation.y = 0 */}
         <group rotation-y={-Math.PI / 2}>
           <BookFlip
             currentPage={currentPage}
             isOpen={bookState === 'reading' || bookState === 'opening' || bookState === 'closing'}
             onLeafClick={handleLeafClick}
+            onPageDrag={handlePageDrag}
             cvData={cvData}
           />
         </group>
