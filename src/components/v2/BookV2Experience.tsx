@@ -37,8 +37,31 @@ export default function BookV2Experience({ cvData }: BookV2ExperienceProps) {
   const dispatchKey = (key: string) =>
     window.dispatchEvent(new KeyboardEvent('keydown', { key }));
 
+  // Drag-to-turn: intercept at DOM level (R3F mesh events are blocked by OrbitControls)
+  const handleContainerPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (bookState !== 'reading') return;
+    // Ignore clicks on the nav buttons (they have their own handlers)
+    if ((e.target as HTMLElement).tagName === 'BUTTON') return;
+    const startX = e.clientX;
+    let dragged = false;
+
+    const onMove = (ev: PointerEvent) => {
+      if (Math.abs(ev.clientX - startX) > 6) dragged = true;
+    };
+    const onUp = (ev: PointerEvent) => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      const delta = ev.clientX - startX;
+      if (dragged && Math.abs(delta) >= 12) {
+        dispatchKey(delta < 0 ? 'ArrowRight' : 'ArrowLeft');
+      }
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  };
+
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100vh' }}>
+    <div style={{ position: 'relative', width: '100%', height: '100vh' }} onPointerDown={handleContainerPointerDown}>
       <Canvas
         camera={{ position: [0, 2, 3], fov: 45 }}
         gl={{ antialias: true, alpha: false }}
