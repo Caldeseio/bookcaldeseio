@@ -65,7 +65,7 @@ const UI = {
     footer: "DIBUJADO POR LUIS C.",
   },
   en: {
-    coverSub: "Illustrated Résumé",
+    coverSub: "Illustrated Resume",
     contents: "— CONTENTS —",
     mapTitle: "A MAP OF MY WORLD",
     chapters: [
