@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import {
   contact, summary, experience, education, certifications, languages,
+  contactEn, summaryEn, experienceEn, educationEn, certificationsEn, languagesEn,
 } from '../data/v2/cvData';
 import { SKILLS } from '../data/skills';
 
@@ -63,26 +64,20 @@ export default function V2Page() {
     };
   }, []);
 
-  // Build cvData object for components
-  const cvData = {
-    contact,
-    summary,
-    experience,
-    education,
-    certifications,
-    languages,
-    skills: SKILLS.map(s => ({ name: s.name, branch: s.branch })),
-  };
+  const skills = SKILLS.map(s => ({ name: s.name, branch: s.branch }));
+
+  const cvData = { contact, summary, experience, education, certifications, languages, skills, lang: 'es' as const };
+  const cvDataEn = { contact: contactEn, summary: summaryEn, experience: experienceEn, education: educationEn, certifications: certificationsEn, languages: languagesEn, skills, lang: 'en' as const };
 
   if (!fontsLoaded) return <LoadingScreen />;
 
   if (isMobile) {
-    return <MobileBook cvData={cvData} />;
+    return <MobileBook cvData={cvData} cvDataEn={cvDataEn} />;
   }
 
   return (
     <div style={{ width: '100%', height: '100vh', overflow: 'hidden' }}>
-      <BookV2Experience cvData={cvData} />
+      <BookV2Experience cvData={cvData} cvDataEn={cvDataEn} />
     </div>
   );
 }

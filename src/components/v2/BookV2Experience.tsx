@@ -12,6 +12,7 @@ import { PageTextureData } from './PageTextureGenerator';
 
 interface BookV2ExperienceProps {
   cvData: PageTextureData;
+  cvDataEn: PageTextureData;
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
@@ -31,8 +32,10 @@ const overlayBtnStyle: React.CSSProperties = {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function BookV2Experience({ cvData }: BookV2ExperienceProps) {
+export default function BookV2Experience({ cvData, cvDataEn }: BookV2ExperienceProps) {
   const [bookState, setBookState] = useState<BookState>('idle');
+  const [lang, setLang] = useState<'es' | 'en'>('es');
+  const activeCvData = lang === 'en' ? cvDataEn : cvData;
 
   const dispatchKey = (key: string) =>
     window.dispatchEvent(new KeyboardEvent('keydown', { key }));
@@ -69,7 +72,7 @@ export default function BookV2Experience({ cvData }: BookV2ExperienceProps) {
       >
         <OrbitControls enableRotate={false} enablePan={false} zoomSpeed={0.6} minDistance={1.5} maxDistance={8} />
         <ForestScene />
-        <MagicBook3D cvData={cvData} onStateChange={setBookState} />
+        <MagicBook3D cvData={activeCvData} onStateChange={setBookState} />
         <EffectComposer>
           <Bloom
             luminanceThreshold={0.55}
@@ -78,6 +81,44 @@ export default function BookV2Experience({ cvData }: BookV2ExperienceProps) {
           />
         </EffectComposer>
       </Canvas>
+
+      {/* Language toggle — always visible */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '20px',
+          right: '20px',
+          display: 'flex',
+          gap: '2px',
+          zIndex: 20,
+          background: 'rgba(36, 48, 36, 0.75)',
+          border: '1px solid #B68A2E',
+          borderRadius: '6px',
+          overflow: 'hidden',
+          backdropFilter: 'blur(8px)',
+        }}
+      >
+        {(['es', 'en'] as const).map((l) => (
+          <button
+            key={l}
+            onClick={() => setLang(l)}
+            style={{
+              padding: '6px 14px',
+              background: lang === l ? 'rgba(185,138,46,0.25)' : 'transparent',
+              border: 'none',
+              color: lang === l ? '#C9A24B' : 'rgba(201,162,75,0.45)',
+              cursor: 'pointer',
+              fontFamily: "'Cinzel', serif",
+              fontSize: '12px',
+              letterSpacing: '0.1em',
+              fontWeight: lang === l ? 700 : 400,
+              transition: 'all 0.2s',
+            }}
+          >
+            {l.toUpperCase()}
+          </button>
+        ))}
+      </div>
 
       {/* Navigation overlay — visible when reading */}
       {bookState === 'reading' && (
