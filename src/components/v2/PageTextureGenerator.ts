@@ -106,9 +106,10 @@ const C = {
   parchCenter: "#F1E4C0",
   parchEdge: "#D9C293",
   ink: "#3c3120",
-  chapterLabel: "#9c7a2a",
+  //chapterLabel: "#9c7a2a",
+  chapterLabel: "#000000",
   dropCap: "#2B3A2C",
-  pageNum: "#8a7a52",
+  pageNum: "#4a3520",
   skillBorder: "#3A332A",
   skillDataBg: "#cfe0b0",
   dotSep: "#B68A2E",
@@ -193,7 +194,7 @@ function pageNumber(ctx: CanvasRenderingContext2D, label: string) {
 }
 
 function chapterLabel(ctx: CanvasRenderingContext2D, label: string, y = 52) {
-  ctx.font = "400 13px Cinzel";
+  ctx.font = "800 13px Cinzel";
   ctx.fillStyle = C.chapterLabel;
   ctx.textAlign = "center";
   ctx.letterSpacing = "0.2em";
