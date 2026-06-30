@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import {
-  contact, summary, experience, education, certifications, languages,
-  contactEn, summaryEn, experienceEn, educationEn, certificationsEn, languagesEn,
+  contact, summary, experience, education, certifications, languages, projects,
+  contactEn, summaryEn, experienceEn, educationEn, certificationsEn, languagesEn, projectsEn,
 } from '../data/v2/cvData';
 import { SKILLS } from '../data/skills';
 
@@ -66,8 +66,8 @@ export default function V2Page() {
 
   const skills = SKILLS.map(s => ({ name: s.name, branch: s.branch }));
 
-  const cvData = { contact, summary, experience, education, certifications, languages, skills, lang: 'es' as const };
-  const cvDataEn = { contact: contactEn, summary: summaryEn, experience: experienceEn, education: educationEn, certifications: certificationsEn, languages: languagesEn, skills, lang: 'en' as const };
+  const cvData = { contact, summary, experience, education, certifications, languages, skills, projects, lang: 'es' as const };
+  const cvDataEn = { contact: contactEn, summary: summaryEn, experience: experienceEn, education: educationEn, certifications: certificationsEn, languages: languagesEn, skills, projects: projectsEn, lang: 'en' as const };
 
   if (!fontsLoaded) return <LoadingScreen />;
 

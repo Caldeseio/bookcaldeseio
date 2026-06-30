@@ -13,6 +13,8 @@ export type PageFace =
   | "index"
   | "about"
   | "tools"
+  | "projects"
+  | "projects2"
   | "experience"
   | "education"
   | "contact"
@@ -26,6 +28,7 @@ export interface PageTextureData {
   certifications: string[];
   languages: { name: string; level: string }[];
   skills: { name: string; branch: string }[];
+  projects: ExperienceItem[];
   lang?: "es" | "en";
 }
 
@@ -37,11 +40,12 @@ const UI = {
     contents: "— CONTENIDO —",
     mapTitle: "UN MAPA DE MI MUNDO",
     chapters: [
-      ["Cap I", "Quién soy", "1"],
-      ["Cap II", "Stack Técnico", "2"],
-      ["Cap III", "El bosque de proyectos", "3"],
-      ["Cap IV", "Educación & Formación", "4"],
-      ["Epílogo", "Contacto", "—"],
+      ["Cap I",   "Quién soy",             "1"],
+      ["Cap II",  "Stack Técnico",         "2"],
+      ["Cap III", "Proyectos",             "3"],
+      ["Cap IV",  "Experiencia",           "5"],
+      ["Cap V",   "Educación & Formación", "6"],
+      ["Epílogo", "Contacto",              "—"],
     ],
     ch1label: "CAPÍTULO I",
     ch1title: "Quién soy",
@@ -53,7 +57,9 @@ const UI = {
     ch3label: "CAPÍTULO III",
     ch3title: "Proyectos",
     ch4label: "CAPÍTULO IV",
-    ch4title: "Educación & Formación",
+    ch4title: "Experiencia",
+    ch5label: "CAPÍTULO V",
+    ch5title: "Educación & Formación",
     certTitle: "CERTIFICACIONES",
     langTitle: "IDIOMAS",
     epilogLabel: "EPÍLOGO",
@@ -69,11 +75,12 @@ const UI = {
     contents: "— CONTENTS —",
     mapTitle: "A MAP OF MY WORLD",
     chapters: [
-      ["Ch. I", "Who I Am", "1"],
-      ["Ch. II", "Tech Stack", "2"],
-      ["Ch. III", "Forest of Projects", "3"],
-      ["Ch. IV", "Education & Training", "4"],
-      ["Epilogue", "Contact", "—"],
+      ["Ch. I",    "Who I Am",             "1"],
+      ["Ch. II",   "Tech Stack",           "2"],
+      ["Ch. III",  "Projects",             "3"],
+      ["Ch. IV",   "Experience",           "5"],
+      ["Ch. V",    "Education & Training", "6"],
+      ["Epilogue", "Contact",              "—"],
     ],
     ch1label: "CHAPTER I",
     ch1title: "Who I Am",
@@ -85,7 +92,9 @@ const UI = {
     ch3label: "CHAPTER III",
     ch3title: "Projects",
     ch4label: "CHAPTER IV",
-    ch4title: "Education & Training",
+    ch4title: "Experience",
+    ch5label: "CHAPTER V",
+    ch5title: "Education & Training",
     certTitle: "CERTIFICATIONS",
     langTitle: "LANGUAGES",
     epilogLabel: "EPILOGUE",
@@ -473,6 +482,74 @@ function renderTools(ctx: CanvasRenderingContext2D, data: PageTextureData) {
   pageNumber(ctx, "— 2 —");
 }
 
+// ─── Shared project card renderer ────────────────────────────────────────────
+
+function drawProjectCards(
+  ctx: CanvasRenderingContext2D,
+  projects: ExperienceItem[],
+) {
+  const PAD = 40;
+  const CARD_H = 100;
+  const CARD_GAP = 24;
+  let cardY = 130;
+
+  for (const proj of projects) {
+    ctx.fillStyle = "rgba(201,162,75,0.09)";
+    ctx.fillRect(PAD, cardY, W - PAD * 2, CARD_H);
+
+    ctx.strokeStyle = C.gold;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(PAD, cardY, W - PAD * 2, CARD_H);
+
+    const btnX = W - PAD - 32;
+    const btnY = cardY + CARD_H / 2;
+    ctx.beginPath();
+    ctx.arc(btnX, btnY, 18, 0, Math.PI * 2);
+    ctx.fillStyle = C.gold;
+    ctx.fill();
+
+    ctx.font = "400 13px Cinzel";
+    ctx.fillStyle = C.leather;
+    ctx.textAlign = "center";
+    ctx.fillText("▶", btnX + 1, btnY + 5);
+
+    ctx.font = "700 17px Cinzel";
+    ctx.fillStyle = C.ink;
+    ctx.textAlign = "left";
+    ctx.fillText(proj.company, PAD + 18, cardY + CARD_H / 2 + 6);
+
+    cardY += CARD_H + CARD_GAP;
+  }
+}
+
+function renderProjects(
+  ctx: CanvasRenderingContext2D,
+  data: PageTextureData,
+) {
+  const u = UI[data.lang ?? "es"];
+  parchmentBg(ctx);
+  ctx.textAlign = "center";
+  chapterLabel(ctx, u.ch3label, 52);
+  sectionTitle(ctx, u.ch3title, 88);
+  goldDivider(ctx, 104, 60);
+  drawProjectCards(ctx, data.projects.slice(0, 2));
+  pageNumber(ctx, "— 3 —");
+}
+
+function renderProjects2(
+  ctx: CanvasRenderingContext2D,
+  data: PageTextureData,
+) {
+  const u = UI[data.lang ?? "es"];
+  parchmentBg(ctx);
+  ctx.textAlign = "center";
+  chapterLabel(ctx, u.ch3label, 52);
+  sectionTitle(ctx, u.ch3title, 88);
+  goldDivider(ctx, 104, 60);
+  drawProjectCards(ctx, data.projects.slice(2));
+  pageNumber(ctx, "— 4 —");
+}
+
 function renderExperience(
   ctx: CanvasRenderingContext2D,
   data: PageTextureData,
@@ -481,22 +558,14 @@ function renderExperience(
   parchmentBg(ctx);
   ctx.textAlign = "center";
 
-  chapterLabel(ctx, u.ch3label, 52);
-  sectionTitle(ctx, u.ch3title, 88);
+  chapterLabel(ctx, u.ch4label, 52);
+  sectionTitle(ctx, u.ch4title, 88);
   goldDivider(ctx, 104, 60);
 
   let y = 128;
   for (let i = 0; i < data.experience.length; i++) {
     const exp = data.experience[i];
     if (y > 630) break;
-
-    // Clickable affordance — subtle gold strip + arrow
-    ctx.fillStyle = "rgba(201,162,75,0.13)";
-    ctx.fillRect(48, y - 14, W - 96, 19);
-    ctx.fillStyle = C.gold;
-    ctx.textAlign = "right";
-    ctx.font = "400 11px Cinzel";
-    ctx.fillText("▶", W - 52, y);
 
     ctx.font = "700 15px Cinzel";
     ctx.fillStyle = C.ink;
@@ -532,7 +601,7 @@ function renderExperience(
     }
   }
 
-  pageNumber(ctx, "— 3 —");
+  pageNumber(ctx, "— 5 —");
 }
 
 function renderEducation(ctx: CanvasRenderingContext2D, data: PageTextureData) {
@@ -540,8 +609,8 @@ function renderEducation(ctx: CanvasRenderingContext2D, data: PageTextureData) {
   parchmentBg(ctx);
   ctx.textAlign = "center";
 
-  chapterLabel(ctx, u.ch4label, 52);
-  sectionTitle(ctx, u.ch4title, 88);
+  chapterLabel(ctx, u.ch5label, 52);
+  sectionTitle(ctx, u.ch5title, 88);
   goldDivider(ctx, 104, 60);
 
   let y = 130;
@@ -595,7 +664,7 @@ function renderEducation(ctx: CanvasRenderingContext2D, data: PageTextureData) {
     y += 20;
   }
 
-  pageNumber(ctx, "— 4 —");
+  pageNumber(ctx, "— 6 —");
 }
 
 function renderContact(ctx: CanvasRenderingContext2D, data: PageTextureData) {
@@ -694,6 +763,12 @@ export function generatePageTexture(
       break;
     case "tools":
       renderTools(ctx, data);
+      break;
+    case "projects":
+      renderProjects(ctx, data);
+      break;
+    case "projects2":
+      renderProjects2(ctx, data);
       break;
     case "experience":
       renderExperience(ctx, data);

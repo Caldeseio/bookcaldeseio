@@ -99,6 +99,42 @@ export const languages = [
   { name: 'Inglés', level: 'Intermedio (B1)' },
 ];
 
+export const projects: ExperienceItem[] = [
+  {
+    company: 'Spyka Planillas',
+    role: 'Sistema de Nómina y RRHH · Costa Rica',
+    period: '',
+    highlights: [
+      'Gestiona horarios, relojes biométricos y cálculo de salarios.',
+      'Aguinaldos y liquidaciones conforme al Ministerio de Trabajo.',
+    ],
+    stack: ['Laravel', 'React', 'MySQL', 'Biométrico'],
+    url: '',
+  },
+  {
+    company: 'App Biometría',
+    role: 'App móvil de control de asistencia',
+    period: '',
+    highlights: [
+      'Marcas de entrada/salida integradas con Spyka Planillas.',
+      'Cálculo automático de horas trabajadas.',
+    ],
+    stack: ['React Native', 'Laravel API'],
+    url: '',
+  },
+  {
+    company: 'Glacix ERP y CRM',
+    role: 'Suite empresarial de gestión',
+    period: '',
+    highlights: [
+      'Módulos de facturación, inventario, clientes y CRM.',
+      'Centraliza toda la operación en una sola plataforma.',
+    ],
+    stack: ['Laravel', 'Vue.js', 'MySQL'],
+    url: '',
+  },
+];
+
 // ─── English ──────────────────────────────────────────────────────────────────
 
 export const contactEn: ContactInfo = {
@@ -172,4 +208,40 @@ export const certificationsEn: string[] = [
 export const languagesEn = [
   { name: 'Spanish', level: 'Native' },
   { name: 'English', level: 'Intermediate (B1)' },
+];
+
+export const projectsEn: ExperienceItem[] = [
+  {
+    company: 'Spyka Planillas',
+    role: 'Payroll & HR System · Costa Rica',
+    period: '',
+    highlights: [
+      'Manages schedules, biometric clocks and salary calculations.',
+      'Bonuses and severance compliant with the Ministry of Labor.',
+    ],
+    stack: ['Laravel', 'React', 'MySQL', 'Biometric'],
+    url: '',
+  },
+  {
+    company: 'Biometría App',
+    role: 'Mobile attendance tracking app',
+    period: '',
+    highlights: [
+      'Clock-in/out integrated with Spyka Planillas.',
+      'Automatic calculation of hours worked.',
+    ],
+    stack: ['React Native', 'Laravel API'],
+    url: '',
+  },
+  {
+    company: 'Glacix ERP & CRM',
+    role: 'Enterprise management suite',
+    period: '',
+    highlights: [
+      'Modules for invoicing, inventory, clients and CRM.',
+      'Centralizes all company operations on one platform.',
+    ],
+    stack: ['Laravel', 'Vue.js', 'MySQL'],
+    url: '',
+  },
 ];

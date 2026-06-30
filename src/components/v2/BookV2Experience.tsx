@@ -81,7 +81,7 @@ export default function BookV2Experience({ cvData, cvDataEn }: BookV2ExperienceP
           cvData={activeCvData}
           onStateChange={setBookState}
           onPageChange={setCurrentPage}
-          onProjectClick={(idx) => setSelectedProject(activeCvData.experience[idx] ?? null)}
+          onProjectClick={(idx) => setSelectedProject(activeCvData.projects[idx] ?? null)}
         />
         <EffectComposer>
           <Bloom

@@ -67,16 +67,16 @@ const pageSideMaterials = [
   new MeshStandardMaterial({ color: '#D9C293' }), // bottom
 ];
 
-// ─── Experience page UV → project index ──────────────────────────────────────
-// Canvas layout: H=704, content starts at y=128, ends at y≈620.
-// Divide content area into equal bands — one per project.
+// ─── Projects page UV → project index ────────────────────────────────────────
+// Cards start at y=130, each card is CARD_H(100) + CARD_GAP(24) = 124px stride.
 function projectIndexFromUVy(uvY: number, count: number): number {
   const canvasY = (1 - uvY) * 704;
-  const contentStart = 128;
-  const contentEnd = 620;
-  if (canvasY < contentStart || canvasY > contentEnd || count === 0) return -1;
-  const band = (contentEnd - contentStart) / count;
-  return Math.min(Math.floor((canvasY - contentStart) / band), count - 1);
+  const CARD_STRIDE = 124; // must match renderProjects CARD_H + CARD_GAP
+  const startY = 130;
+  if (canvasY < startY || count === 0) return -1;
+  const idx = Math.floor((canvasY - startY) / CARD_STRIDE);
+  if (idx >= count) return -1;
+  return idx;
 }
 
 // ─── Leaf component ───────────────────────────────────────────────────────────
@@ -90,8 +90,10 @@ interface LeafProps {
   backTexture: CanvasTexture;
   onLeafClick: (leafIndex: number) => void;
   onDrag?: (deltaX: number) => void;
-  isExperiencePage?: boolean;
-  experienceCount?: number;
+  isProjectsPage?: boolean;
+  projectCount?: number;
+  isProjects2Page?: boolean;
+  project2Count?: number;
   onProjectClick?: (index: number) => void;
 }
 
@@ -104,8 +106,10 @@ function Leaf({
   backTexture,
   onLeafClick,
   onDrag,
-  isExperiencePage,
-  experienceCount = 0,
+  isProjectsPage,
+  projectCount = 0,
+  isProjects2Page,
+  project2Count = 0,
   onProjectClick,
 }: LeafProps) {
   const groupRef = useRef<THREE.Group>(null);
@@ -241,10 +245,19 @@ function Leaf({
             window.removeEventListener('pointerup', onUp);
             const delta = ev.clientX - startX;
             if (!dragged || Math.abs(delta) < 12) {
-              // Click — check if on experience page and in a project zone
-              if (isExperiencePage && hitUVy !== null && onProjectClick) {
-                const idx = projectIndexFromUVy(hitUVy, experienceCount);
+              // Click — check if on a projects page and in a card zone
+              if ((isProjectsPage || isProjects2Page) && hitUVy !== null) {
+                const canvasY = (1 - hitUVy) * 704;
+                console.log('[BookFlip] click uvY=', hitUVy.toFixed(4), 'canvasY=', canvasY.toFixed(1),
+                  'isProjectsPage=', isProjectsPage, 'isProjects2Page=', isProjects2Page);
+              }
+              if (isProjectsPage && hitUVy !== null && onProjectClick) {
+                const idx = projectIndexFromUVy(hitUVy, projectCount);
                 if (idx >= 0) { onProjectClick(idx); return; }
+              }
+              if (isProjects2Page && hitUVy !== null && onProjectClick) {
+                const relIdx = projectIndexFromUVy(hitUVy, project2Count);
+                if (relIdx >= 0) { onProjectClick(projectCount + relIdx); return; }
               }
               onLeafClick(leafIndex);
             } else {
@@ -310,8 +323,10 @@ export default function BookFlip({
           backTexture={textures[i * 2 + 1]}
           onLeafClick={onLeafClick}
           onDrag={onPageDrag}
-          isExperiencePage={i === 2 && currentPage === 2 && isOpen}
-          experienceCount={cvData.experience.length}
+          isProjectsPage={i === 2 && currentPage === 2 && isOpen}
+          projectCount={Math.min(2, cvData.projects.length)}
+          isProjects2Page={i === 2 && currentPage === 3 && isOpen}
+          project2Count={Math.max(0, cvData.projects.length - 2)}
           onProjectClick={onProjectClick}
         />
       ))}
