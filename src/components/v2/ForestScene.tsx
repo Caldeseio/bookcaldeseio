@@ -17,13 +17,6 @@ const CANOPY_COLORS = Array.from({ length: TREE_COUNT }, () => {
   return new THREE.Color().setHSL(h, s, l);
 });
 
-// Mushroom glow positions & colors (scattered around base of tree ring)
-const MUSHROOM_GLOWS = [
-  { pos: [4.2, -0.3, 3.8] as [number,number,number], color: '#7affb0', intensity: 2.5, distance: 4 },
-  { pos: [-5.1, -0.3, 2.4] as [number,number,number], color: '#b06aff', intensity: 2.0, distance: 3.5 },
-  { pos: [2.8, -0.3, -5.5] as [number,number,number], color: '#ff9a4a', intensity: 2.2, distance: 3.5 },
-  { pos: [-3.6, -0.3, -4.2] as [number,number,number], color: '#4adcff', intensity: 1.8, distance: 3 },
-];
 
 export default function ForestScene() {
   const trunkRef = useRef<THREE.InstancedMesh>(null);
@@ -43,14 +36,14 @@ export default function ForestScene() {
       const scale = 0.6 + Math.random() * 0.8;
 
       // Trunk
-      dummy.position.set(x, -0.5 + 0.75 * scale, z);
+      dummy.position.set(x, -1.0 + 0.75 * scale, z);
       dummy.rotation.y = Math.random() * Math.PI * 2;
       dummy.scale.setScalar(scale);
       dummy.updateMatrix();
       trunkRef.current.setMatrixAt(i, dummy.matrix);
 
       // Canopy (higher up)
-      dummy.position.set(x, -0.5 + 1.5 * scale + 1.75 * scale, z);
+      dummy.position.set(x, -1.0 + 1.5 * scale + 1.75 * scale, z);
       dummy.rotation.y = Math.random() * Math.PI * 2;
       dummy.scale.setScalar(scale);
       dummy.updateMatrix();
@@ -107,8 +100,8 @@ export default function ForestScene() {
         decay={2}
       />
 
-      {/* Ground plane */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]}>
+      {/* Ground plane — y=−1.0 clears the book bottom at y=−0.855 */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.0, 0]}>
         <planeGeometry args={[80, 80]} />
         <meshStandardMaterial color="#0d1f0d" roughness={1} metalness={0.1} />
       </mesh>
@@ -141,11 +134,6 @@ export default function ForestScene() {
           sizeAttenuation
         />
       </points>
-
-      {/* Glowing mushrooms — colored point lights near the ground, no geometry needed */}
-      {MUSHROOM_GLOWS.map((m, i) => (
-        <pointLight key={i} color={m.color} intensity={m.intensity} position={m.pos} distance={m.distance} decay={2} />
-      ))}
 
       {/* Moon */}
       <mesh position={[-12, 9, -28]}>

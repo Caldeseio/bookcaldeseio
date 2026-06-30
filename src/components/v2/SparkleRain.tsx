@@ -7,7 +7,7 @@ import { useFrame } from '@react-three/fiber';
 const COUNT = 60;
 const FALL_SPEED = 0.004;
 const Y_TOP = 14;
-const Y_BOT = -0.5;
+const Y_BOT = -1.0;
 
 export default function SparkleRain() {
   const geomRef = useRef<THREE.BufferGeometry>(null);

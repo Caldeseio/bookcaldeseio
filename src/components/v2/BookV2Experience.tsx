@@ -70,7 +70,7 @@ export default function BookV2Experience({ cvData, cvDataEn }: BookV2ExperienceP
         gl={{ antialias: true, alpha: false }}
         style={{ width: '100%', height: '100vh', background: '#0a1a0a' }}
       >
-        <OrbitControls enableRotate={false} enablePan={false} zoomSpeed={0.6} minDistance={1.5} maxDistance={8} />
+        <OrbitControls enableRotate={false} enablePan={false} zoomSpeed={0.6} minDistance={0.8} maxDistance={8} />
         <ForestScene />
         <MagicBook3D cvData={activeCvData} onStateChange={setBookState} />
         <EffectComposer>
