@@ -12,6 +12,8 @@ export type BookState = 'idle' | 'hover' | 'opening' | 'reading' | 'closing';
 interface MagicBook3DProps {
   cvData: PageTextureData;
   onStateChange?: (state: BookState) => void;
+  onPageChange?: (page: number) => void;
+  onProjectClick?: (index: number) => void;
 }
 
 const playPageFlip = () => {
@@ -22,7 +24,7 @@ const playPageFlip = () => {
   } catch { /* ignore */ }
 };
 
-export default function MagicBook3D({ cvData, onStateChange }: MagicBook3DProps) {
+export default function MagicBook3D({ cvData, onStateChange, onPageChange, onProjectClick }: MagicBook3DProps) {
   const [currentPage, setCurrentPage] = useState(0);
   const [bookState, setBookState] = useState<BookState>('idle');
 
@@ -36,6 +38,7 @@ export default function MagicBook3D({ cvData, onStateChange }: MagicBook3DProps)
   const bookStateRef = useRef<BookState>('idle');
 
   useEffect(() => { onStateChange?.(bookState); }, [bookState, onStateChange]);
+  useEffect(() => { onPageChange?.(currentPage); }, [currentPage, onPageChange]);
 
   useEffect(() => {
     return () => { if (transitionTimeout.current) clearTimeout(transitionTimeout.current); };
@@ -145,6 +148,7 @@ export default function MagicBook3D({ cvData, onStateChange }: MagicBook3DProps)
             onLeafClick={handleLeafClick}
             onPageDrag={handlePageDrag}
             cvData={cvData}
+            onProjectClick={onProjectClick}
           />
         </group>
       </group>

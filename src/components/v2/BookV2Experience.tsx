@@ -6,7 +6,9 @@ import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import { OrbitControls } from '@react-three/drei';
 import ForestScene from './ForestScene';
 import MagicBook3D, { BookState } from './MagicBook3D';
+import ProjectDetailModal from './ProjectDetailModal';
 import { PageTextureData } from './PageTextureGenerator';
+import type { ExperienceItem } from '../../data/v2/cvData';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -35,6 +37,9 @@ const overlayBtnStyle: React.CSSProperties = {
 export default function BookV2Experience({ cvData, cvDataEn }: BookV2ExperienceProps) {
   const [bookState, setBookState] = useState<BookState>('idle');
   const [lang, setLang] = useState<'es' | 'en'>('es');
+  const [, setCurrentPage] = useState(0);
+  const [selectedProject, setSelectedProject] = useState<ExperienceItem | null>(null);
+
   const activeCvData = lang === 'en' ? cvDataEn : cvData;
 
   const dispatchKey = (key: string) =>
@@ -43,8 +48,8 @@ export default function BookV2Experience({ cvData, cvDataEn }: BookV2ExperienceP
   // Drag-to-turn: intercept at DOM level (R3F mesh events are blocked by OrbitControls)
   const handleContainerPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (bookState !== 'reading') return;
-    // Ignore clicks on the nav buttons (they have their own handlers)
     if ((e.target as HTMLElement).tagName === 'BUTTON') return;
+    if ((e.target as HTMLElement).tagName === 'A') return;
     const startX = e.clientX;
     let dragged = false;
 
@@ -72,7 +77,12 @@ export default function BookV2Experience({ cvData, cvDataEn }: BookV2ExperienceP
       >
         <OrbitControls enableRotate={false} enablePan={false} zoomSpeed={0.6} minDistance={0.8} maxDistance={8} />
         <ForestScene />
-        <MagicBook3D cvData={activeCvData} onStateChange={setBookState} />
+        <MagicBook3D
+          cvData={activeCvData}
+          onStateChange={setBookState}
+          onPageChange={setCurrentPage}
+          onProjectClick={(idx) => setSelectedProject(activeCvData.experience[idx] ?? null)}
+        />
         <EffectComposer>
           <Bloom
             luminanceThreshold={0.55}
@@ -178,6 +188,13 @@ export default function BookV2Experience({ cvData, cvDataEn }: BookV2ExperienceP
           </>
         </div>
       )}
+
+      {/* Project detail modal */}
+      <ProjectDetailModal
+        project={selectedProject}
+        lang={lang}
+        onClose={() => setSelectedProject(null)}
+      />
     </div>
   );
 }

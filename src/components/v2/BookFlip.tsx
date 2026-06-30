@@ -67,6 +67,18 @@ const pageSideMaterials = [
   new MeshStandardMaterial({ color: '#D9C293' }), // bottom
 ];
 
+// ─── Experience page UV → project index ──────────────────────────────────────
+// Canvas layout: H=704, content starts at y=128, ends at y≈620.
+// Divide content area into equal bands — one per project.
+function projectIndexFromUVy(uvY: number, count: number): number {
+  const canvasY = (1 - uvY) * 704;
+  const contentStart = 128;
+  const contentEnd = 620;
+  if (canvasY < contentStart || canvasY > contentEnd || count === 0) return -1;
+  const band = (contentEnd - contentStart) / count;
+  return Math.min(Math.floor((canvasY - contentStart) / band), count - 1);
+}
+
 // ─── Leaf component ───────────────────────────────────────────────────────────
 
 interface LeafProps {
@@ -78,6 +90,9 @@ interface LeafProps {
   backTexture: CanvasTexture;
   onLeafClick: (leafIndex: number) => void;
   onDrag?: (deltaX: number) => void;
+  isExperiencePage?: boolean;
+  experienceCount?: number;
+  onProjectClick?: (index: number) => void;
 }
 
 function Leaf({
@@ -89,6 +104,9 @@ function Leaf({
   backTexture,
   onLeafClick,
   onDrag,
+  isExperiencePage,
+  experienceCount = 0,
+  onProjectClick,
 }: LeafProps) {
   const groupRef = useRef<THREE.Group>(null);
   const skinnedMeshRef = useRef<THREE.SkinnedMesh>(null);
@@ -211,6 +229,8 @@ function Leaf({
         onPointerDown={(e) => {
           e.stopPropagation();
           const startX = e.clientX;
+          // Capture UV at click moment — e.uv is populated by Three.js raycasting
+          const hitUVy = e.uv ? e.uv.y : null;
           let dragged = false;
 
           const onMove = (ev: PointerEvent) => {
@@ -221,9 +241,14 @@ function Leaf({
             window.removeEventListener('pointerup', onUp);
             const delta = ev.clientX - startX;
             if (!dragged || Math.abs(delta) < 12) {
-              onLeafClick(leafIndex);   // click
+              // Click — check if on experience page and in a project zone
+              if (isExperiencePage && hitUVy !== null && onProjectClick) {
+                const idx = projectIndexFromUVy(hitUVy, experienceCount);
+                if (idx >= 0) { onProjectClick(idx); return; }
+              }
+              onLeafClick(leafIndex);
             } else {
-              onDrag?.(delta);           // horizontal drag → page turn
+              onDrag?.(delta);
             }
           };
           window.addEventListener('pointermove', onMove);
@@ -245,6 +270,7 @@ interface BookFlipProps {
   onLeafClick: (leafIndex: number) => void;
   onPageDrag?: (deltaX: number) => void;
   cvData: PageTextureData;
+  onProjectClick?: (index: number) => void;
 }
 
 export default function BookFlip({
@@ -253,6 +279,7 @@ export default function BookFlip({
   onLeafClick,
   onPageDrag,
   cvData,
+  onProjectClick,
 }: BookFlipProps) {
   const textures = useMemo(() => {
     return bookPages.map((page) => {
@@ -283,6 +310,9 @@ export default function BookFlip({
           backTexture={textures[i * 2 + 1]}
           onLeafClick={onLeafClick}
           onDrag={onPageDrag}
+          isExperiencePage={i === 2 && currentPage === 2 && isOpen}
+          experienceCount={cvData.experience.length}
+          onProjectClick={onProjectClick}
         />
       ))}
     </group>

@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useRef, useState } from "react";
+import ProjectDetailModal from "./ProjectDetailModal";
+import type { ExperienceItem } from "../../data/v2/cvData";
 
 interface CvData {
   contact: {
@@ -19,6 +21,9 @@ interface CvData {
     role: string;
     period: string;
     highlights: string[];
+    stack: string[];
+    image?: string;
+    url?: string;
   }>;
   education: Array<{
     degree: string;
@@ -84,6 +89,7 @@ export default function MobileBook({ cvData, cvDataEn }: MobileBookProps) {
   const [animating, setAnimating] = useState(false);
   const [direction, setDirection] = useState<"left" | "right">("right");
   const [lang, setLang] = useState<"es" | "en">("es");
+  const [selectedProject, setSelectedProject] = useState<ExperienceItem | null>(null);
   const TOTAL_PAGES = 7;
 
   const L = LABELS[lang];
@@ -364,6 +370,7 @@ export default function MobileBook({ cvData, cvDataEn }: MobileBookProps) {
             {data.experience.map((exp, i) => (
               <div
                 key={i}
+                onClick={() => setSelectedProject(exp)}
                 style={{
                   marginBottom: "16px",
                   paddingBottom: "16px",
@@ -371,16 +378,25 @@ export default function MobileBook({ cvData, cvDataEn }: MobileBookProps) {
                     i < data.experience.length - 1
                       ? "1px dotted #B68A2E"
                       : "none",
+                  cursor: "pointer",
+                  borderRadius: "4px",
+                  padding: "10px",
+                  transition: "background 0.2s",
                 }}
+                onMouseEnter={e => (e.currentTarget.style.background = "rgba(201,162,75,0.15)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
               >
-                <div
-                  style={{
-                    color: "#3c3120",
-                    fontWeight: 700,
-                    fontSize: "14px",
-                  }}
-                >
-                  {exp.company}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div
+                    style={{
+                      color: "#3c3120",
+                      fontWeight: 700,
+                      fontSize: "14px",
+                    }}
+                  >
+                    {exp.company}
+                  </div>
+                  <span style={{ color: "#B68A2E", fontSize: "14px" }}>→</span>
                 </div>
                 <div
                   style={{
@@ -729,6 +745,13 @@ export default function MobileBook({ cvData, cvDataEn }: MobileBookProps) {
           {L.next}
         </button>
       </div>
+
+      {/* Project detail modal */}
+      <ProjectDetailModal
+        project={selectedProject}
+        lang={lang}
+        onClose={() => setSelectedProject(null)}
+      />
     </div>
   );
 }

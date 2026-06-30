@@ -490,6 +490,14 @@ function renderExperience(
     const exp = data.experience[i];
     if (y > 630) break;
 
+    // Clickable affordance — subtle gold strip + arrow
+    ctx.fillStyle = "rgba(201,162,75,0.13)";
+    ctx.fillRect(48, y - 14, W - 96, 19);
+    ctx.fillStyle = C.gold;
+    ctx.textAlign = "right";
+    ctx.font = "400 11px Cinzel";
+    ctx.fillText("▶", W - 52, y);
+
     ctx.font = "700 15px Cinzel";
     ctx.fillStyle = C.ink;
     ctx.textAlign = "left";

@@ -15,6 +15,8 @@ export interface ExperienceItem {
   period: string;
   highlights: string[];
   stack: string[];
+  image?: string;
+  url?: string;
 }
 
 export interface EducationItem {
@@ -51,6 +53,8 @@ export const experience: ExperienceItem[] = [
       'Optimización SQL (MariaDB/MySQL): índices estratégicos y refactor → hasta 70% mejora en respuesta',
     ],
     stack: ['PHP', 'JavaScript', 'React', 'Laravel', 'MariaDB', 'MySQL', 'Power BI', 'AWS'],
+    // image: '/images/csg.png',
+    url: 'https://csg.co.cr',
   },
   {
     company: 'Freelance',
@@ -63,6 +67,8 @@ export const experience: ExperienceItem[] = [
       'Ciclo completo: levantamiento de requerimientos, desarrollo, testing y despliegue en AWS/Vercel',
     ],
     stack: ['React', 'Node.js', 'Django', 'Python', 'Tailwind CSS', 'Vercel'],
+    // image: '/images/freelance.png',
+    url: 'https://caldeseios.vercel.app',
   },
   {
     company: 'Compu Servicios Gomez',
@@ -122,6 +128,8 @@ export const experienceEn: ExperienceItem[] = [
       'SQL optimization (MariaDB/MySQL): strategic indexing and refactor → up to 70% response time improvement',
     ],
     stack: ['PHP', 'JavaScript', 'React', 'Laravel', 'MariaDB', 'MySQL', 'Power BI', 'AWS'],
+    // image: '/images/csg.png',
+    url: 'https://csg.co.cr',
   },
   {
     company: 'Freelance',
@@ -134,6 +142,8 @@ export const experienceEn: ExperienceItem[] = [
       'Full project lifecycle: requirements, development, testing and deployment on AWS/Vercel',
     ],
     stack: ['React', 'Node.js', 'Django', 'Python', 'Tailwind CSS', 'Vercel'],
+    // image: '/images/freelance.png',
+    url: 'https://caldeseios.vercel.app',
   },
   {
     company: 'Compu Servicios Gomez',
