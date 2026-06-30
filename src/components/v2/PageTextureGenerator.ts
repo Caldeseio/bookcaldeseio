@@ -38,7 +38,7 @@ const UI = {
     mapTitle: "UN MAPA DE MI MUNDO",
     chapters: [
       ["Cap I", "Quién soy", "1"],
-      ["Cap II", "Herramientas", "2"],
+      ["Cap II", "Stack Técnico", "2"],
       ["Cap III", "El bosque de proyectos", "3"],
       ["Cap IV", "Educación & Formación", "4"],
       ["Epílogo", "Contacto", "—"],
@@ -47,9 +47,9 @@ const UI = {
     ch1title: "Quién soy",
     ch1quote: "«Técnica, claridad y carácter.»",
     ch2label: "CAPÍTULO II",
-    ch2title: "Mis herramientas",
-    ch2sub: "lo que llevo en la mochila",
-    ch2legend: "verde = datos & BI · blanco = fullstack / devops",
+    ch2title: "Stack Técnico",
+    ch2sub: "mi arsenal tecnológico",
+    ch2legend: "verde = datos & BI · crema = código & devops",
     ch3label: "CAPÍTULO III",
     ch3title: "El bosque de proyectos",
     ch4label: "CAPÍTULO IV",
@@ -70,7 +70,7 @@ const UI = {
     mapTitle: "A MAP OF MY WORLD",
     chapters: [
       ["Ch. I", "Who I Am", "1"],
-      ["Ch. II", "Toolkit", "2"],
+      ["Ch. II", "Tech Stack", "2"],
       ["Ch. III", "Forest of Projects", "3"],
       ["Ch. IV", "Education & Training", "4"],
       ["Epilogue", "Contact", "—"],
@@ -79,9 +79,9 @@ const UI = {
     ch1title: "Who I Am",
     ch1quote: "«Technique, clarity and character.»",
     ch2label: "CHAPTER II",
-    ch2title: "My Toolkit",
-    ch2sub: "what I carry in my pack",
-    ch2legend: "green = data & BI · white = fullstack / devops",
+    ch2title: "Tech Stack",
+    ch2sub: "my technical arsenal",
+    ch2legend: "green = data & BI · cream = code & devops",
     ch3label: "CHAPTER III",
     ch3title: "The Forest of Projects",
     ch4label: "CHAPTER IV",
@@ -433,19 +433,20 @@ function renderTools(ctx: CanvasRenderingContext2D, data: PageTextureData) {
   ctx.fillText(u.ch2sub, W / 2, 112);
   goldDivider(ctx, 126, 60);
 
-  const top10 = data.skills.slice(0, 10);
-  const cols = 2;
-  const padX = 52;
-  const cellW = (W - padX * 2 - 12) / cols;
-  const cellH = 34;
+  const cols = 3;
+  const padX = 40;
+  const colGap = 10;
+  const cellW = (W - padX * 2 - colGap * (cols - 1)) / cols;
+  const cellH = 27;
+  const rowGap = 7;
   const startY = 148;
 
-  for (let i = 0; i < top10.length; i++) {
+  for (let i = 0; i < data.skills.length; i++) {
     const col = i % cols;
     const row = Math.floor(i / cols);
-    const x = padX + col * (cellW + 12);
-    const y = startY + row * (cellH + 8);
-    const skill = top10[i];
+    const x = padX + col * (cellW + colGap);
+    const y = startY + row * (cellH + rowGap);
+    const skill = data.skills[i];
     const isData = skill.branch === "data";
 
     ctx.fillStyle = isData ? C.skillDataBg : C.parchCenter;
@@ -456,14 +457,14 @@ function renderTools(ctx: CanvasRenderingContext2D, data: PageTextureData) {
     ctx.fill();
     ctx.stroke();
 
-    ctx.font = "400 14px Cinzel";
+    ctx.font = "400 12px Cinzel, serif";
     ctx.fillStyle = C.ink;
     ctx.textAlign = "left";
-    ctx.fillText(skill.name, x + 10, y + 23);
+    ctx.fillText(skill.name, x + 8, y + 19);
   }
 
   // branch legend
-  const legendY = startY + Math.ceil(top10.length / cols) * (cellH + 8) + 16;
+  const legendY = startY + Math.ceil(data.skills.length / cols) * (cellH + rowGap) + 14;
   ctx.font = "italic 11px EB Garamond, Georgia, serif";
   ctx.fillStyle = C.pageNum;
   ctx.textAlign = "center";
