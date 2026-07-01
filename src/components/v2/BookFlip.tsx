@@ -67,10 +67,12 @@ const pageSideMaterials = [
   new MeshStandardMaterial({ color: '#D9C293' }), // bottom
 ];
 
-// ─── Projects page UV → project index ────────────────────────────────────────
-// Cards start at y=130, each card is CARD_H(100) + CARD_GAP(24) = 124px stride.
-function projectIndexFromUVy(uvY: number, count: number): number {
-  const canvasY = (1 - uvY) * 704;
+// ─── Projects page hit-test: local Y → project index ─────────────────────────
+// Uses the mesh's local-space Y (not UV y) so the result is zoom- and
+// view-angle-independent. localY ranges from -PAGE_HEIGHT/2 (bottom) to
+// +PAGE_HEIGHT/2 (top), matching the BoxGeometry centre at (0,0,0).
+function projectIndexFromLocalY(localY: number, count: number): number {
+  const canvasY = (PAGE_HEIGHT / 2 - localY) / PAGE_HEIGHT * 704;
   const CARD_STRIDE = 124; // must match renderProjects CARD_H + CARD_GAP
   const startY = 130;
   if (canvasY < startY || count === 0) return -1;
@@ -233,8 +235,10 @@ function Leaf({
         onPointerDown={(e) => {
           e.stopPropagation();
           const startX = e.clientX;
-          // Capture UV at click moment — e.uv is populated by Three.js raycasting
-          const hitUVy = e.uv ? e.uv.y : null;
+          // Capture local Y at click moment — zoom/view-independent
+          const localVec = e.point.clone();
+          e.object.worldToLocal(localVec);
+          const hitLocalY = localVec.y;
           let dragged = false;
 
           const onMove = (ev: PointerEvent) => {
@@ -246,17 +250,12 @@ function Leaf({
             const delta = ev.clientX - startX;
             if (!dragged || Math.abs(delta) < 12) {
               // Click — check if on a projects page and in a card zone
-              if ((isProjectsPage || isProjects2Page) && hitUVy !== null) {
-                const canvasY = (1 - hitUVy) * 704;
-                console.log('[BookFlip] click uvY=', hitUVy.toFixed(4), 'canvasY=', canvasY.toFixed(1),
-                  'isProjectsPage=', isProjectsPage, 'isProjects2Page=', isProjects2Page);
-              }
-              if (isProjectsPage && hitUVy !== null && onProjectClick) {
-                const idx = projectIndexFromUVy(hitUVy, projectCount);
+              if (isProjectsPage && onProjectClick) {
+                const idx = projectIndexFromLocalY(hitLocalY, projectCount);
                 if (idx >= 0) { onProjectClick(idx); return; }
               }
-              if (isProjects2Page && hitUVy !== null && onProjectClick) {
-                const relIdx = projectIndexFromUVy(hitUVy, project2Count);
+              if (isProjects2Page && onProjectClick) {
+                const relIdx = projectIndexFromLocalY(hitLocalY, project2Count);
                 if (relIdx >= 0) { onProjectClick(projectCount + relIdx); return; }
               }
               onLeafClick(leafIndex);
